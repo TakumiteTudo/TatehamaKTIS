@@ -36,11 +36,14 @@
             // 
             // pictureBox1
             // 
+            pictureBox1.BackColor = Color.Black;
             pictureBox1.Location = new Point(0, 0);
             pictureBox1.Name = "pictureBox1";
             pictureBox1.Size = new Size(800, 600);
             pictureBox1.TabIndex = 0;
             pictureBox1.TabStop = false;
+            pictureBox1.MouseDown += pictureBox1_MouseDown;
+            pictureBox1.MouseUp += pictureBox1_MouseUp;
             // 
             // timer1
             // 
@@ -56,9 +59,10 @@
             BackgroundImageLayout = ImageLayout.None;
             ClientSize = new Size(800, 600);
             Controls.Add(pictureBox1);
-            FormBorderStyle = FormBorderStyle.SizableToolWindow;
+            FormBorderStyle = FormBorderStyle.FixedToolWindow;
             Name = "Form1";
             Text = "KTIS";
+            TopMost = true;
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ResumeLayout(false);
         }
