@@ -9,6 +9,14 @@ namespace TatehamaKTIS.Display.Segment
     public enum DisplaySegmentType
     {
         /// <summary>
+        /// 参照
+        /// </summary>
+        include,
+        /// <summary>
+        /// 四角形
+        /// </summary>
+        box,
+        /// <summary>
         /// 文字
         /// </summary>
         text,
