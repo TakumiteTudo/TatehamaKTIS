@@ -29,9 +29,9 @@ namespace TatehamaKTIS.Font
                         {
                             fontImage.SetPixel(x, y, Color.White); // 黒は白
                         }
-                        else if (pixelColor.ToArgb() == 0xC0C0C0)
+                        else if (pixelColor.ToArgb() == 0xFFC0C0C0)
                         {
-                            //灰色は枠について
+                            fontImage.SetPixel(x, y, Color.Black);
                         }
                         else
                         {
@@ -69,9 +69,63 @@ namespace TatehamaKTIS.Font
                 str = "？";
             }
             int index = LCDFontList.IndexOf(str);
+
+            // 半角文字かどうかを判定
+            bool isHalfWidth = IsHalfWidthCharacter(str);
+
+            // 使用する幅を決定
+            int charWidth = isHalfWidth ? halfcharWidth : fillcharWidth;
+
             int x = (index % 32) * (fillcharWidth + 1);
             int y = (index / 32) * (charHeight + 1);
-            return GetLCDFontImageByPos(x, y, fillcharWidth, charHeight);
+
+            // 元の画像を取得
+            Bitmap originalImage = GetLCDFontImageByPos(x, y, charWidth, charHeight);
+
+            // トリミング処理
+            int trimWidth = originalImage.Width;
+            for (int i = originalImage.Width - 1; i >= 0; i--)
+            {
+                bool isAllGray = true;
+                for (int j = 0; j < originalImage.Height; j++)
+                {
+                    if (originalImage.GetPixel(i, j).ToArgb() != Color.Black.ToArgb())
+                    {
+                        isAllGray = false;
+                        break;
+                    }
+                }
+
+                if (!isAllGray)
+                {
+                    trimWidth = i + 1; // トリミングする幅を更新
+                    break;
+                }
+            }
+
+            // トリミングされた画像を作成
+            Bitmap trimmedImage = new Bitmap(trimWidth, originalImage.Height);
+            using (Graphics g = Graphics.FromImage(trimmedImage))
+            {
+                g.DrawImage(originalImage, new Rectangle(0, 0, trimmedImage.Width, trimmedImage.Height),
+                    new Rectangle(0, 0, trimmedImage.Width, trimmedImage.Height), GraphicsUnit.Pixel);
+            }
+
+            return trimmedImage;
+        }
+
+        /// <summary>
+        /// 半角文字かどうかを判定する
+        /// </summary>
+        /// <param name="str">判定対象の文字列</param>
+        /// <returns>半角文字の場合は true、それ以外は false</returns>
+        private bool IsHalfWidthCharacter(string str)
+        {
+            if (string.IsNullOrEmpty(str)) return false;
+
+            // Unicode の半角文字範囲をチェック
+            char c = str[0];
+            return (c >= 0x20 && c <= 0x7E) || (c >= 0xFF61 && c <= 0xFF9F);
         }
 
         /// <summary>
