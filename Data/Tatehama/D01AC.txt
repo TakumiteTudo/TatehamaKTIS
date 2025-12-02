@@ -1,0 +1,28 @@
+name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	button_type
+上下基礎読込	0	0	include	none	none	_TMPA					
+薄背景	0	127	box	none	base3				800	175	
+											
+画面番号	25	66	text	lightgray	none	D01AC	1	1			
+画面名称	102	66	text	green	none	運転情報	2	1			
+											
+運行パターン基礎	39	106	text	lightgray	none	運行パターン	1	1			
+運行パターン種別	161	106	text	yellow	none	準急	1	1			
+運行パターン始発	241	106	text	yellow	none	館　浜　	1	1			
+運行パターン矢印	321	106	text	lightgray	none	→	1	1			
+運行パターン終着	351	106	text	yellow	none	日野森　	1	1			
+											
+選別基礎	545	86	text	lightgray	none	選別設定	1	1			
+選別内容	652	86	text	base2	cyan	準　急	2	1			
+列番基礎	545	106	text	lightgray	none	列車番号	1	1			
+列番内容	652	106	text	yellow	none	　　２０７６Ｃ	1	1			
+											
+社線前駅枠	245	195	box	lightgray	none				92	51	
+社線駅矢印	337	195	image	none	none	D01AC_Yajirushi					
+社線次駅枠	408	195	box	lightgray	none				92	51	
+											
+社線前駅	257	202	text	white	none	駒　野　	1	2			
+社線次駅	419	202	text	white	none	浜　園　	1	2			
+											
+社線現在種別	602	174	text	yellow	none	準急	2	2			
+社線現在行先	602	222	text	yellow	none	日野森	2	2			
+社線現在基礎	746	222	text	lightgray	none	行	2	2			

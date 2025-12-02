@@ -1,0 +1,17 @@
+name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonType	function1	variable1	function2	variable2	function3	variable3
+上部背景	0	0	box	none	base1				800	63								
+中央背景	0	63	box	none	base2				800	437								
+時刻基礎	1	1	text	lightgray	none	　時刻　　　時　　分　　秒	1	1										
+時刻	73	1	text	white	none	１２　３４　５６	1	1										
+速度基礎	1	21	text	lightgray	none	　速度　　　　　　　　ｋｍ／ｈ	1	1										
+速度	144	21	text	white	none	２５５	1	1										
+キロ程基礎	1	41	text	lightgray	none	キロ程　　　　　　　　ｋｍ	1	1										
+キロ程	73	41	text	white	none	　　１２３．０	1	1										
+上部区切り	270	0	box	none	base2				2	63								
+初期選択背景	700	0	box	none	base2				100	63								
+初期選択	705	5	button	indigo1	none	初期選択	1	1	90	55		function	transition	S00AB				
+																		
+運転士メニュー	10	505	button	indigo1	none	運転士\nメニュー	1	1	90	65		function	transition	D00AA				
+運転情報画面	110	505	button	indigo1	none	運転情報\n画面	1	1	90	65		function	transition	D01AC				
+応急マニュアル	210	505	button	indigo1	none	応急マニ\nュアル	1	1	90	65		function	transition	B00AA				
+車掌情報画面	310	505	button	indigo1	none	車掌情報\n画面	1	1	90	65		function	transition	C01AA				

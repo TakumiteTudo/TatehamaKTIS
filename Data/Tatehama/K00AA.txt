@@ -1,3 +1,0 @@
-name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY
-test	0	0	text	none	none	テスト文面	1	1		
-test	0	20	text	none	none	動的読込	1	1		
