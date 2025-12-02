@@ -10,8 +10,3 @@ name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonT
 上部区切り	270	0	box	none	base2				2	63								
 初期選択背景	700	0	box	none	base2				100	63								
 初期選択	705	5	button	indigo1	none	初期選択	1	1	90	55		function	transition	S00AB				
-																		
-運転士メニュー	10	505	button	indigo1	none	運転士\nメニュー	1	1	90	65		function	transition	D00AA				
-運転情報画面	110	505	button	indigo1	none	運転情報\n画面	1	1	90	65		function	transition	D01AC				
-応急マニュアル	210	505	button	indigo1	none	応急マニ\nュアル	1	1	90	65		function	transition	B00AA				
-車掌情報画面	310	505	button	indigo1	none	車掌情報\n画面	1	1	90	65		function	transition	C01AA				

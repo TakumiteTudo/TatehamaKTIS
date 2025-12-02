@@ -4,8 +4,8 @@ default = S00AB
 [Color]
 none = 0x00000000
 base1 = 0xFF000000
-base2 = 0xFF29333B
-base3 = 0xFF3F454E
+base2 = 0xFF2A343A
+base3 = 0xFF3F454D
 white = 0xFFFFFFFF
 indigo1 = 0xFF233872
 indigo2 = 0xFF233872
