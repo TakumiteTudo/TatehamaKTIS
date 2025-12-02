@@ -110,7 +110,7 @@ namespace TatehamaKTIS.Display
                                 }
                             }
 
-                            segments.Add(new ButtonSegment(name, x, y, color, baseColor, buttonText, buttonSizeX, buttonSizeY, fields[4], groupname, buttonType, functionList));
+                            segments.Add(new ButtonSegment(name, x, y, color, baseColor, buttonText, buttonScalarX, buttonScalarY, buttonSizeX, buttonSizeY, fields[4], groupname, buttonType, functionList));
                             break;
 
                         case DisplaySegmentType.image:

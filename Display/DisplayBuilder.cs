@@ -150,16 +150,16 @@ namespace TatehamaKTIS.Display
                 throw new KeyNotFoundException($"ボタン設定が見つかりません: {buttonSegment.buttonColor}");
             }
 
+            // ボタンのサイズと角のサイズを取得
+            int buttonWidth = buttonSegment.sizeX;
+            int buttonHeight = buttonSegment.sizeY;
+            int cornerWidth = config.CornerX;
+            int cornerHeight = config.CornerY;
+
             using (Bitmap buttonImage = new Bitmap(buttonImagePath))
             {
                 // 透明色を設定
                 buttonImage.MakeTransparent(Color.FromArgb(unchecked((int)0xFFFF00FF)));
-
-                // ボタンのサイズと角のサイズを取得
-                int buttonWidth = buttonSegment.sizeX;
-                int buttonHeight = buttonSegment.sizeY;
-                int cornerWidth = config.CornerX;
-                int cornerHeight = config.CornerY;
 
                 // 描画用のボタン画像を作成
                 using (Bitmap scaledButton = new Bitmap(buttonWidth, buttonHeight))
@@ -192,15 +192,15 @@ namespace TatehamaKTIS.Display
             {
                 // 画像を描画するパターン
                 string imageName = content.Substring(7, content.Length - 8); // "[image:<ファイル名>]" からファイル名を抽出
-                string imagePath = Path.Combine("Image", "Button", imageName);
+                string imagePath = Path.Combine("Image", "Button", "Image", imageName + ".png");
 
                 if (File.Exists(imagePath))
                 {
                     using (Bitmap contentImage = new Bitmap(imagePath))
                     {
                         // 画像をボタン中央に配置
-                        int imageX = buttonSegment.x + (buttonSegment.sizeX - contentImage.Width) / 2;
-                        int imageY = buttonSegment.y + (buttonSegment.sizeY - contentImage.Height) / 2;
+                        int imageX = buttonSegment.x + (buttonWidth - contentImage.Width) / 2;
+                        int imageY = buttonSegment.y + (buttonHeight - contentImage.Height) / 2;
                         g.DrawImage(contentImage, imageX, imageY);
                     }
                 }
@@ -233,15 +233,25 @@ namespace TatehamaKTIS.Display
                 foreach (string line in lines)
                 {
                     Bitmap lineImage = stringService.GetLCDFontImageByString(line, letterSpacing: 1, isVertical: false, color: textColor);
-                    lineImages.Add(lineImage);
-                    textHeight += lineImage.Height + lineSpacing;
-                    maxWidth = Math.Max(maxWidth, lineImage.Width);
+
+                    // スケーリングを適用
+                    Bitmap scaledLineImage = new Bitmap(lineImage.Width * buttonSegment.scalarX, lineImage.Height * buttonSegment.scalarY);
+                    using (Graphics sg = Graphics.FromImage(scaledLineImage))
+                    {
+                        sg.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor; // アンチエイリアスを無効化
+                        sg.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half; // ピクセルのオフセットを調整
+                        sg.DrawImage(lineImage, new Rectangle(0, 0, scaledLineImage.Width, scaledLineImage.Height));
+                    }
+
+                    lineImages.Add(scaledLineImage);
+                    textHeight += scaledLineImage.Height + lineSpacing;
+                    maxWidth = Math.Max(maxWidth, scaledLineImage.Width);
                 }
                 textHeight -= lineSpacing; // 最後の行間を除く
 
                 // テキストの起点座標を計算（左詰め、中央配置）
-                int textX = buttonSegment.x + (buttonSegment.sizeX - maxWidth - 1) / 2;
-                int textY = buttonSegment.y + (buttonSegment.sizeY - textHeight - 1) / 2;
+                int textX = buttonSegment.x + (buttonWidth - maxWidth - 1) / 2;
+                int textY = buttonSegment.y + (buttonHeight - textHeight - 1) / 2;
 
                 // 各行を描画
                 foreach (Bitmap lineImage in lineImages)
