@@ -29,22 +29,36 @@ namespace TatehamaKTIS.Display
             SetDisplayType("Tatehama");
         }
 
-        internal void SetDisplayType(string type)
+        internal async Task SetDisplayType(string type)
         {
+            displayBuilder = new DisplayBuilder();
+            segmentReader = new SegmentReader();
             displayType = type;
             displayConfig = ParseConfig();
-            ConfigureSegmentReaderColors(); // 色設定を行う
+            ConfigureSegmentReaderColors(); // 色設定を行う     
 
-            if (displayConfig.ContainsKey("Common"))
+            await RunStartSequence();
+        }
+
+        internal void ModeSW()
+        {
+            if (!displayConfig.TryGetValue("Common", out var commonConfig) || !commonConfig.TryGetValue("modeswitch", out var startSequence))
             {
-                var commonConfig = displayConfig["Common"];
-                if (commonConfig.ContainsKey("default"))
+                Debug.WriteLine("モード切替未定義");
+                return;
+            }
+
+            // 最後に default 画面を表示
+            if (commonConfig.TryGetValue("modeswitch", out var modeScreen))
+            {
+                Debug.WriteLine($"モード切替画面に遷移: {modeScreen}");
+                var defaultSegments = segmentReader.ReadSegmentsFromFile($"Data/{displayType}/{modeScreen}.txt");
+                if (defaultSegments != null && defaultSegments.Count > 0)
                 {
-                    displayName = commonConfig["default"];
+                    displayBuilder.displaySegmentDatas = defaultSegments;
+                    DisplayUpdate();
                 }
             }
-            displayBuilder.displaySegmentDatas = segmentReader.ReadSegmentsFromFile($"Data/{displayType}/{displayName}.txt");
-            DisplayUpdate();
         }
 
         internal void DisplayUpdate()
@@ -103,10 +117,17 @@ namespace TatehamaKTIS.Display
                                 // 表示切替処理
                                 var newDisplayName = func.Item2;
                                 Debug.WriteLine($"画面遷移: {newDisplayName}");
-                                var newSegments = segmentReader.ReadSegmentsFromFile($"Data/Tatehama/{newDisplayName}.txt");
-                                if (newSegments != null && newSegments.Count > 0)
+                                try
                                 {
-                                    displayBuilder.displaySegmentDatas = newSegments;
+                                    var newSegments = segmentReader.ReadSegmentsFromFile($"Data/Tatehama/{newDisplayName}.txt");
+                                    if (newSegments != null && newSegments.Count > 0)
+                                    {
+                                        displayBuilder.displaySegmentDatas = newSegments;
+                                    }
+                                }
+                                catch (FileNotFoundException ex)
+                                {
+                                    Debug.WriteLine($"画面未定義：{newDisplayName}");
                                 }
                                 break;
                         }
@@ -189,6 +210,65 @@ namespace TatehamaKTIS.Display
             else
             {
                 Debug.WriteLine("Color セクションが見つかりませんでした。");
+            }
+        }
+
+        private async Task RunStartSequence()
+        {
+            if (!displayConfig.TryGetValue("Common", out var commonConfig) || !commonConfig.TryGetValue("start", out var startSequence))
+            {
+                Debug.WriteLine("スタートシーケンスが定義されていません。");
+                return;
+            }
+
+            // スタートシーケンスを解析
+            var sequences = startSequence.Split('/');
+            foreach (var sequence in sequences)
+            {
+                var parts = sequence.Split(',');
+                if (parts.Length != 2)
+                {
+                    Debug.WriteLine($"無効なシーケンス形式: {sequence}");
+                    continue;
+                }
+
+                var screenName = parts[0].Trim();
+                if (!int.TryParse(parts[1].Trim(), out int durationMs))
+                {
+                    Debug.WriteLine($"無効な表示秒数: {parts[1]}");
+                    continue;
+                }
+
+                // 画面を切り替え
+                Debug.WriteLine($"画面遷移: {screenName} ({durationMs}ms)");
+                var newSegments = segmentReader.ReadSegmentsFromFile($"Data/{displayType}/{screenName}.txt");
+                if (newSegments != null && newSegments.Count > 0)
+                {
+                    displayBuilder.displaySegmentDatas = newSegments;
+                    DisplayUpdate();
+                }
+
+                // 指定された時間待機
+                await Task.Delay(durationMs);
+            }
+
+            // 最後に default 画面を表示
+            if (commonConfig.TryGetValue("default", out var defaultScreen))
+            {
+                Debug.WriteLine($"デフォルト画面に遷移：{defaultScreen}");
+                try
+                {
+                    var defaultSegments = segmentReader.ReadSegmentsFromFile($"Data/{displayType}/{defaultScreen}.txt");
+                    if (defaultSegments != null && defaultSegments.Count > 0)
+                    {
+                        displayBuilder.displaySegmentDatas = defaultSegments;
+                        DisplayUpdate();
+                    }
+                }
+                catch (FileNotFoundException ex)
+                {
+                    Debug.WriteLine($"画面未定義：{defaultScreen}");
+                }
             }
         }
     }

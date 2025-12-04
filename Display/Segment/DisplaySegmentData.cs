@@ -14,6 +14,7 @@ namespace TatehamaKTIS.Display.Segment
         public int y { get; set; }
         public Color color { get; set; }
         public Color baseColor { get; set; }
+        public bool isVisible { get; set; } = true;
 
         protected DisplaySegmentData(string name, DisplaySegmentType type, int x, int y, Color color, Color basecolor)
         {

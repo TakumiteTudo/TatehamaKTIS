@@ -80,23 +80,19 @@ namespace TatehamaKTIS.Display
                 letterSpacing: 1,
                 isVertical: false,
                 color: textSegment.color,
-                basecolor: textSegment.baseColor
+                basecolor: textSegment.baseColor,
+                scalarX: textSegment.ScalarX,
+                scalarY: textSegment.ScalarY
             );
 
-            // スケーリング
-            Bitmap scaledTextImage = new Bitmap(
-                textImage.Width * textSegment.ScalarX,
-                textImage.Height * textSegment.ScalarY
-            );
-
-            using (Graphics sg = Graphics.FromImage(scaledTextImage))
+            using (Graphics sg = Graphics.FromImage(textImage))
             {
                 sg.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor; // アンチエイリアスを無効化
                 sg.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half; // ピクセルのオフセットを調整
-                sg.DrawImage(textImage, new Rectangle(0, 0, scaledTextImage.Width, scaledTextImage.Height));
+                sg.DrawImage(textImage, new Rectangle(0, 0, textImage.Width, textImage.Height));
             }
 
-            g.DrawImage(scaledTextImage, textSegment.x, textSegment.y);
+            g.DrawImage(textImage, textSegment.x, textSegment.y);
         }
 
         private void DrawBoxSegment(Graphics g, BoxSegment boxSegment)
@@ -165,6 +161,8 @@ namespace TatehamaKTIS.Display
                 using (Bitmap scaledButton = new Bitmap(buttonWidth, buttonHeight))
                 using (Graphics sg = Graphics.FromImage(scaledButton))
                 {
+                    sg.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor; // アンチエイリアスを無効化
+                    sg.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half; // ピクセルのオフセットを調整
                     // 四隅を描画（原寸のまま）
                     sg.DrawImage(buttonImage, new Rectangle(0, 0, cornerWidth, cornerHeight), new Rectangle(0, 0, cornerWidth, cornerHeight), GraphicsUnit.Pixel); // 左上
                     sg.DrawImage(buttonImage, new Rectangle(buttonWidth - cornerWidth, 0, cornerWidth, cornerHeight), new Rectangle(buttonImage.Width - cornerWidth, 0, cornerWidth, cornerHeight), GraphicsUnit.Pixel); // 右上
@@ -198,6 +196,8 @@ namespace TatehamaKTIS.Display
                 {
                     using (Bitmap contentImage = new Bitmap(imagePath))
                     {
+                        // 透明色を設定
+                        contentImage.MakeTransparent(Color.FromArgb(unchecked((int)0xFFFF00FF)));
                         // 画像をボタン中央に配置
                         int imageX = buttonSegment.x + (buttonWidth - contentImage.Width) / 2;
                         int imageY = buttonSegment.y + (buttonHeight - contentImage.Height) / 2;
@@ -212,53 +212,23 @@ namespace TatehamaKTIS.Display
             else
             {
                 // テキストを描画するパターン
-                string[] lines = content.Split(new[] { "\\n" }, StringSplitOptions.None); // 改行で分割
-                int lineSpacing = 3; // 行間
-                int textHeight = 0;
-                int maxWidth = 0;
+                Bitmap textImage = stringService.GetLCDFontImageByString(
+                    content,
+                    letterSpacing: 1,
+                    isVertical: false,
+                    color: buttonSegment.isChecked
+                        ? (buttonSegment.isLighting != 0 ? config.TextCTL : config.TextCT)
+                        : (buttonSegment.isLighting != 0 ? config.TextCFL : config.TextCF),
+                    basecolor: Color.Transparent,
+                    scalarX: buttonSegment.scalarX,
+                    scalarY: buttonSegment.scalarY,
+                    lineSpacing: 3
+                );
 
-                // ボタンの状態に応じた文字色を取得
-                Color textColor;
-                if (buttonSegment.isChecked)
-                {
-                    textColor = buttonSegment.isLighting != 0 ? config.TextCTL : config.TextCT; // 点灯中かどうかで切り替え
-                }
-                else
-                {
-                    textColor = buttonSegment.isLighting != 0 ? config.TextCFL : config.TextCF; // 点灯中かどうかで切り替え
-                }
-
-                // 各行の画像を生成
-                List<Bitmap> lineImages = new List<Bitmap>();
-                foreach (string line in lines)
-                {
-                    Bitmap lineImage = stringService.GetLCDFontImageByString(line, letterSpacing: 1, isVertical: false, color: textColor);
-
-                    // スケーリングを適用
-                    Bitmap scaledLineImage = new Bitmap(lineImage.Width * buttonSegment.scalarX, lineImage.Height * buttonSegment.scalarY);
-                    using (Graphics sg = Graphics.FromImage(scaledLineImage))
-                    {
-                        sg.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor; // アンチエイリアスを無効化
-                        sg.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half; // ピクセルのオフセットを調整
-                        sg.DrawImage(lineImage, new Rectangle(0, 0, scaledLineImage.Width, scaledLineImage.Height));
-                    }
-
-                    lineImages.Add(scaledLineImage);
-                    textHeight += scaledLineImage.Height + lineSpacing;
-                    maxWidth = Math.Max(maxWidth, scaledLineImage.Width);
-                }
-                textHeight -= lineSpacing; // 最後の行間を除く
-
-                // テキストの起点座標を計算（左詰め、中央配置）
-                int textX = buttonSegment.x + (buttonWidth - maxWidth - 1) / 2;
-                int textY = buttonSegment.y + (buttonHeight - textHeight - 1) / 2;
-
-                // 各行を描画
-                foreach (Bitmap lineImage in lineImages)
-                {
-                    g.DrawImage(lineImage, textX, textY);
-                    textY += lineImage.Height + lineSpacing;
-                }
+                // テキストをボタン中央に配置
+                int textX = buttonSegment.x + (buttonWidth - textImage.Width) / 2;
+                int textY = buttonSegment.y + (buttonHeight - textImage.Height) / 2;
+                g.DrawImage(textImage, textX, textY);
             }
         }
 

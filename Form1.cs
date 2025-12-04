@@ -5,6 +5,7 @@ namespace TatehamaKTIS
     public partial class Form1 : Form
     {
         DisplayManager displayManager;
+        bool nowtouch;
         public Form1()
         {
             InitializeComponent();
@@ -24,11 +25,12 @@ namespace TatehamaKTIS
                 }
             };
             displayManager.DisplayUpdate();
+            nowtouch = false;
         }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            this.Text = "TIMS";
+            this.Text = "KTIS";
             displayManager.DisplayUpdate();
         }
 
@@ -36,6 +38,12 @@ namespace TatehamaKTIS
         {
             if (sender is PictureBox pictureBox && e is MouseEventArgs mouseEventArgs)
             {
+                if (MouseButtons != MouseButtons.Left)
+                {
+                    nowtouch = false;
+                    return;
+                }
+                nowtouch = true;
                 // クリック位置を取得
                 int clickX = mouseEventArgs.X;
                 int clickY = mouseEventArgs.Y;
@@ -59,6 +67,11 @@ namespace TatehamaKTIS
         {
             if (sender is PictureBox pictureBox && e is MouseEventArgs mouseEventArgs)
             {
+                if (!nowtouch)
+                {
+                    return;
+                }
+                nowtouch = false;
                 // クリック位置を取得
                 int clickX = mouseEventArgs.X;
                 int clickY = mouseEventArgs.Y;
@@ -75,6 +88,30 @@ namespace TatehamaKTIS
 
                 // DisplayManager にクリック位置を渡す
                 displayManager.DisplayTotchUp(clickX, clickY);
+            }
+        }
+
+        private void 強制初期選択ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void 強制再起動ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            displayManager.SetDisplayType("Tatehama");
+        }
+
+        private void モード切替SWToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            displayManager.ModeSW();
+        }
+
+        private void 現在画像コピーToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (pictureBox1.Image != null)
+            {
+                // クリップボードに画像をコピー
+                Clipboard.SetImage(pictureBox1.Image);
             }
         }
     }
