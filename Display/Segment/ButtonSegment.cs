@@ -44,6 +44,31 @@ namespace TatehamaKTIS.Display.Segment
             isLighting = 0;
             originTime = DateTime.Now;
         }
+
+        public override DisplaySegmentData DeepCopy()
+        {
+            return new ButtonSegment(
+                name,
+                x,
+                y,
+                color,
+                baseColor,
+                Text,
+                scalarX,
+                scalarY,
+                sizeX,
+                sizeY,
+                buttonColor,
+                groupname,
+                buttonType,
+                new List<Tuple<string, string>>(functionList)
+            )
+            {
+                isChecked = this.isChecked,
+                isLighting = this.isLighting,
+                originTime = this.originTime
+            };
+        }
     }
 
     enum ButtonType

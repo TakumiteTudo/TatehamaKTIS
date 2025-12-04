@@ -11,21 +11,86 @@ namespace TatehamaKTIS.Display
 {
     internal class DisplayBuilder
     {
-        internal List<DisplaySegmentData> displaySegmentDatas = new List<DisplaySegmentData>();
+        internal List<DisplaySegmentData> displaySegmentDatas { get; set; }
         private Dictionary<string, ButtonConfig> buttonConfigs = new Dictionary<string, ButtonConfig>();
         CharService charService;
         StringService stringService;
+
+        // 前回の描画結果を保持するフィールド
+        private Bitmap? previousImage;
+        private List<DisplaySegmentData> previousDisplaySegmentDatas { get; set; }
 
         internal DisplayBuilder()
         {
             charService = new CharService("Image/Char/font.bmp", "Image/Char/char.txt");
             stringService = new StringService(charService);
 
+            displaySegmentDatas = new List<DisplaySegmentData>();
+            previousDisplaySegmentDatas = new List<DisplaySegmentData>();
+
             // ボタン設定の読み込み
             LoadButtonConfigs();
         }
 
         internal Bitmap BuildDisplayImage()
+        {
+            previousDisplaySegmentDatas = displaySegmentDatas.Select(segment => segment.DeepCopy()).ToList(); // DeepCopy を使用
+            return getDisplayImage(displaySegmentDatas);
+        }
+
+        internal Bitmap BuildDisplayImageDiff()
+        {
+            var filter = FilterChangedSegments();
+            if (filter.Count == 0)
+            {
+                return previousImage;
+            }
+            Debug.WriteLine($"filter：{DateTime.Now:O}");
+            Bitmap canvas = getDisplayImage(filter);
+            Debug.WriteLine($"canvas：{DateTime.Now:O}");
+
+            // 前回の画像と合成
+            if (previousImage != null)
+            {
+                using (Graphics g = Graphics.FromImage(previousImage))
+                {
+                    g.DrawImage(canvas, 0, 0);
+                }
+            }
+            else
+            {
+                previousImage = (Bitmap)canvas.Clone();
+            }
+            Debug.WriteLine($"previousImage：{DateTime.Now:O}");
+            previousDisplaySegmentDatas = displaySegmentDatas.Select(segment => segment.DeepCopy()).ToList(); // DeepCopy を使用   
+            Debug.WriteLine($"DeepCopy：{DateTime.Now:O}");
+            return (Bitmap)previousImage.Clone();
+        }
+
+        internal Bitmap BuildDisplayImageDiff(List<DisplaySegmentData> displaySegmentData)
+        {
+            Bitmap canvas = getDisplayImage(displaySegmentData);
+            Debug.WriteLine($"canvas：{DateTime.Now:O}");
+
+            // 前回の画像と合成
+            if (previousImage != null)
+            {
+                using (Graphics g = Graphics.FromImage(previousImage))
+                {
+                    g.DrawImage(canvas, 0, 0);
+                }
+            }
+            else
+            {
+                previousImage = (Bitmap)canvas.Clone();
+            }
+            Debug.WriteLine($"previousImage：{DateTime.Now:O}");
+            previousDisplaySegmentDatas = displaySegmentDatas.Select(segment => segment.DeepCopy()).ToList(); // DeepCopy を使用   
+            Debug.WriteLine($"DeepCopy：{DateTime.Now:O}");
+            return (Bitmap)previousImage.Clone();
+        }
+
+        internal Bitmap getDisplayImage(List<DisplaySegmentData> segmentDatas)
         {
             // キャンバスの初期化
             Bitmap canvas = new Bitmap(800, 600);
@@ -66,8 +131,78 @@ namespace TatehamaKTIS.Display
                     }
                 }
             }
+            // 前回の画像を更新
+            previousImage = (Bitmap)canvas.Clone();
 
             return canvas;
+        }
+
+        // 差分を抽出するメソッド
+        internal List<DisplaySegmentData> FilterChangedSegments()
+        {
+            // 新しいリストに変更されたセグメントのみを追加
+            var changedSegments = new List<DisplaySegmentData>();
+            var nowSegments = displaySegmentDatas.Select(segment => segment.DeepCopy()).ToList();
+
+            foreach (var segment in nowSegments)
+            {
+                var previousSegment = previousDisplaySegmentDatas.FirstOrDefault(prev => prev.name == segment.name);
+
+                // 前回のセグメントが存在しない、または内容が異なる場合に追加
+                if (previousSegment == null || !CompareSegmentData(segment, previousSegment))
+                {
+                    changedSegments.Add(segment);
+                }
+            }
+            // 現在のセグメントを次回の比較用に保存
+            previousDisplaySegmentDatas = nowSegments;
+
+            return changedSegments;
+        }
+
+        // 2つの DisplaySegmentData を比較するメソッド
+        private bool CompareSegmentData(DisplaySegmentData segment1, DisplaySegmentData segment2)
+        {
+            // 基本プロパティを比較
+            if (segment1.Type != segment2.Type ||
+                segment1.x != segment2.x ||
+                segment1.y != segment2.y ||
+                segment1.color != segment2.color ||
+                segment1.baseColor != segment2.baseColor ||
+                segment1.isVisible != segment2.isVisible)
+            {
+                return false;
+            }
+
+            // 型ごとの追加プロパティを比較
+            switch (segment1)
+            {
+                case TextSegment text1 when segment2 is TextSegment text2:
+                    return text1.Text == text2.Text &&
+                           text1.ScalarX == text2.ScalarX &&
+                           text1.ScalarY == text2.ScalarY;
+
+                case BoxSegment box1 when segment2 is BoxSegment box2:
+                    return box1.sizeX == box2.sizeX &&
+                           box1.sizeY == box2.sizeY;
+
+                case ButtonSegment button1 when segment2 is ButtonSegment button2:
+                    return button1.Text == button2.Text &&
+                           button1.scalarX == button2.scalarX &&
+                           button1.scalarY == button2.scalarY &&
+                           button1.sizeX == button2.sizeX &&
+                           button1.sizeY == button2.sizeY &&
+                           button1.buttonColor == button2.buttonColor &&
+                           button1.isChecked == button2.isChecked &&
+                           button1.isLighting == button2.isLighting || button1.isLighting > 0;
+
+                case ImageSegment image1 when segment2 is ImageSegment image2:
+                    return image1.filename == image2.filename;
+
+                default:
+                    // 未対応の型の場合は常に異なるとみなす
+                    return false;
+            }
         }
 
         private void DrawTextSegment(Graphics g, TextSegment textSegment)

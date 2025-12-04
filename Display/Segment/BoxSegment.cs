@@ -19,6 +19,11 @@ namespace TatehamaKTIS.Display.Segment
             this.sizeY = sizeY;
         }
 
+        public override DisplaySegmentData DeepCopy()
+        {
+            return new BoxSegment(name, x, y, color, baseColor, sizeX, sizeY);
+        }
+
         public override string ToString()
         {
             return $"{base.ToString()} Box at ({x},{y}) with size ({sizeX}x{sizeY})";

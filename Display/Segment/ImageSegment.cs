@@ -17,6 +17,11 @@ namespace TatehamaKTIS.Display.Segment
             this.filename = filename;
         }
 
+        public override DisplaySegmentData DeepCopy()
+        {
+            return new ImageSegment(name, x, y, color, baseColor, filename);
+        }
+
         public override string ToString()
         {
             return $"{base.ToString()} Image at ({x},{y}) with file \"{filename}\"";

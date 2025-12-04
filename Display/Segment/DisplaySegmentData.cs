@@ -26,6 +26,8 @@ namespace TatehamaKTIS.Display.Segment
             this.baseColor = basecolor;
         }
 
+        public abstract DisplaySegmentData DeepCopy();
+
         public override string ToString()
         {
             return $"{Type}";

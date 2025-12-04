@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TatehamaKTIS.Display.Segment;
 using TatehamaKTIS.Font;
@@ -19,7 +22,11 @@ namespace TatehamaKTIS.Display
         internal Action<Bitmap> displayAction;
 
         private DateTime lastTouchTime = DateTime.MinValue; // 最後のタッチ時刻
-        private readonly TimeSpan minTouchInterval = TimeSpan.FromMilliseconds(100); // 最少間隔（例: 200ms）
+        private TimeSpan minTouchInterval; // 最少間隔
+
+        // 操作履歴キュー
+        private readonly ConcurrentQueue<(string ActionType, int X, int Y)> operationQueue = new();
+        private readonly SemaphoreSlim operationSemaphore = new(1, 1); // 同時実行を防ぐためのセマフォ
 
         internal DisplayManager()
         {
@@ -27,6 +34,10 @@ namespace TatehamaKTIS.Display
             segmentReader = new SegmentReader();
             DisplayUpdate();
             SetDisplayType("Tatehama");
+            minTouchInterval = TimeSpan.FromMilliseconds(100);
+
+            // 操作履歴の処理を開始
+            _ = ProcessOperationQueueAsync();
         }
 
         internal async Task SetDisplayType(string type)
@@ -35,7 +46,8 @@ namespace TatehamaKTIS.Display
             segmentReader = new SegmentReader();
             displayType = type;
             displayConfig = ParseConfig();
-            ConfigureSegmentReaderColors(); // 色設定を行う     
+            ConfigureSegmentReaderColors(); // 色設定を行う          
+            minTouchInterval = TimeSpan.FromMilliseconds(100);
 
             await RunStartSequence();
         }
@@ -67,28 +79,94 @@ namespace TatehamaKTIS.Display
             displayAction?.Invoke(displayImage);
         }
 
-        internal async Task DisplayTotchDown(int x, int y)
+        internal void DisplayUpdateDiff()
         {
+            var displayImage = displayBuilder.BuildDisplayImageDiff();
+            displayAction?.Invoke(displayImage);
+        }
+
+        internal void DisplayUpdateDiff(List<DisplaySegmentData> displaySegmentData)
+        {
+            var displayImage = displayBuilder.BuildDisplayImageDiff(displaySegmentData);
+            displayAction?.Invoke(displayImage);
+        }
+
+        // タッチダウンイベントを操作履歴に追加
+        internal void DisplayTotchDown(int x, int y)
+        {
+            operationQueue.Enqueue(("Down", x, y));
+        }
+
+        // タッチアップイベントを操作履歴に追加
+        internal void DisplayTotchUp(int x, int y)
+        {
+            operationQueue.Enqueue(("Up", x, y));
+        }
+
+        // 操作履歴を順次処理する非同期タスク
+        private async Task ProcessOperationQueueAsync()
+        {
+            while (true)
+            {
+                // キューが空の場合は待機
+                if (operationQueue.IsEmpty)
+                {
+                    await Task.Delay(2);
+                    continue;
+                }
+
+                // キューから操作を取得
+                if (operationQueue.TryDequeue(out var operation))
+                {
+                    await operationSemaphore.WaitAsync(); // 同時実行を防ぐ
+                    try
+                    {
+                        var (actionType, x, y) = operation;
+                        switch (actionType)
+                        {
+                            case "Down":
+                                await HandleTouchDownAsync(x, y);
+                                break;
+                            case "Up":
+                                await HandleTouchUpAsync(x, y);
+                                break;
+                        }
+                    }
+                    finally
+                    {
+                        operationSemaphore.Release();
+                        await Task.Delay(minTouchInterval);
+                    }
+                }
+            }
+        }
+
+        // タッチダウン処理
+        private async Task HandleTouchDownAsync(int x, int y)
+        {
+            Debug.WriteLine($"タッチ：{DateTime.Now:O}");
             var timeSinceLastTouch = DateTime.Now - lastTouchTime;
             if (timeSinceLastTouch < minTouchInterval)
             {
                 var waitTime = minTouchInterval - timeSinceLastTouch;
                 await Task.Delay(waitTime);
             }
-
             lastTouchTime = DateTime.Now; // 最後のタッチ時刻を更新
+
             Debug.WriteLine($"タッチ：{x}, {y}");
-            // タッチ処理の実装（必要に応じて）
             var button = DetectButtonTouch(x, y);
             if (button != null)
             {
                 Debug.WriteLine($"ボタン押：{button.name}");
                 button.isChecked = !button.isChecked;
             }
-            DisplayUpdate();
+            Debug.WriteLine($"DisplayUpdateDiff：{DateTime.Now:O}");
+            DisplayUpdateDiff([button]);
+            Debug.WriteLine($"タッチ終：{DateTime.Now:O}");
         }
 
-        internal async Task DisplayTotchUp(int x, int y)
+        // タッチアップ処理
+        private async Task HandleTouchUpAsync(int x, int y)
         {
             var timeSinceLastTouch = DateTime.Now - lastTouchTime;
             if (timeSinceLastTouch < minTouchInterval)
@@ -96,10 +174,9 @@ namespace TatehamaKTIS.Display
                 var waitTime = minTouchInterval - timeSinceLastTouch;
                 await Task.Delay(waitTime);
             }
-
             lastTouchTime = DateTime.Now; // 最後のタッチ時刻を更新
+
             Debug.WriteLine($"タッチ：{x}, {y}");
-            // タッチ処理の実装（必要に応じて）
             var button = DetectButtonTouch(x, y);
             if (button != null)
             {
@@ -107,14 +184,12 @@ namespace TatehamaKTIS.Display
                 if (button.buttonType == ButtonType.function)
                 {
                     button.isChecked = false;
-                    // 関数タイプのボタン処理
                     foreach (var func in button.functionList)
                     {
                         Debug.WriteLine($"関数実行: {func.Item1} パラメータ: {func.Item2}");
                         switch (func.Item1)
                         {
                             case "transition":
-                                // 表示切替処理
                                 var newDisplayName = func.Item2;
                                 Debug.WriteLine($"画面遷移: {newDisplayName}");
                                 try
@@ -134,7 +209,7 @@ namespace TatehamaKTIS.Display
                     }
                 }
             }
-            DisplayUpdate();
+            DisplayUpdateDiff([button]);
         }
 
         public ButtonSegment? DetectButtonTouch(int touchX, int touchY)
@@ -143,15 +218,14 @@ namespace TatehamaKTIS.Display
             {
                 if (segment is ButtonSegment button)
                 {
-                    // ボタン領域内かどうかを判定
                     if (touchX >= button.x && touchX <= button.x + button.sizeX &&
                         touchY >= button.y && touchY <= button.y + button.sizeY)
                     {
-                        return button; // タッチされたボタンを返す
+                        return button;
                     }
                 }
             }
-            return null; // タッチされたボタンがない場合
+            return null;
         }
 
         private Dictionary<string, Dictionary<string, string>> ParseConfig()

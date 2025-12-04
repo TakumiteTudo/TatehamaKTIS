@@ -17,6 +17,10 @@ namespace TatehamaKTIS.Display.Segment
             ScalarX = scalarX;
             ScalarY = scalarY;
         }
+        public override DisplaySegmentData DeepCopy()
+        {
+            return new TextSegment(name, x, y, color, baseColor, Text, ScalarX, ScalarY);
+        }
         public override string ToString()
         {
             return $"{base.ToString()} \"{Text}\" at ({x},{y})";

@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using TatehamaKTIS.Display;
+using TatehamaKTIS.Display.Segment;
 
 namespace TatehamaKTIS
 {
@@ -31,7 +33,7 @@ namespace TatehamaKTIS
         private void timer1_Tick(object sender, EventArgs e)
         {
             this.Text = "KTIS";
-            displayManager.DisplayUpdate();
+            displayManager.DisplayUpdateDiff();
         }
 
         private void pictureBox1_MouseDown(object sender, EventArgs e)
