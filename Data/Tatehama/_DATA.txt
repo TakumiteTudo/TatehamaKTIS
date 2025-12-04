@@ -1,5 +1,7 @@
 [Common]
+start = S00AA,5000
 default = S00AB
+modeswitch = G00AA
 
 [Color]
 none = 0x00000000
@@ -11,7 +13,9 @@ indigo1 = 0xFF233872
 indigo2 = 0xFF233872
 blue = 0xFF0000FF
 cyan = 0xFF00FFFF
+lightgreen = 0xFF66FF99
 red = 0xFFFF0000
 yellow = 0xFFFFFF00
 green = 0xFF00FF00
 lightgray = 0xFFC0C0C0
+darkgray = 0xFF191919

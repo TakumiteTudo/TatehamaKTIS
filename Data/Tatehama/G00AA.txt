@@ -1,0 +1,7 @@
+name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonType	function1	variable1	function2	variable2	function3	variable3
+背景	0	0	box	none	base2				800	600								
+画面番号	25	66	text	lightgray	none	G00AA	1	1										
+画面名称	102	66	text	lightgreen	none	モード選択	2	1										
+通常	105	175	button	indigo1	none	通常	2	2	190	250		function	transition	S00AB				
+検修	305	175	button	indigo1	none	検修	2	2	190	250		function	transition	M00AA				
+試験	505	175	button	indigo1	none	試験	2	2	190	250		function	transition	T00AA				

@@ -1,0 +1,7 @@
+name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonType	function1	variable1	function2	variable2	function3	variable3
+背景	0	0	box	none	base2				800	600								
+画面番号	25	66	text	lightgray	none	S00AA	1	1										
+																		
+システム名	221	170	text	white	none	６０００形　ＫＴＩＳ	2	4										
+指示メッセージ1	167	280	text	cyan	none	ただいま準備中です。	2	2										
+指示メッセージ2	167	350	text	cyan	none	　　しばらくお待ち下さい。	2	2										

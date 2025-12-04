@@ -1,7 +1,7 @@
 name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonType	function1	variable1	function2	variable2	function3	variable3
 背景	0	0	box	none	base2				800	600								
 画面番号	25	66	text	lightgray	none	S00AB	1	1										
-画面名称	102	66	text	green	none	初期選択	2	1										
-画面切替	5	5	button	indigo1	none	　	1	1	52	38		function						
-運転士	210	175	button	indigo1	none	運転士	2	2	190	250		function	transition	D01AC				
+画面名称	102	66	text	lightgreen	none	初期選択	2	1										
+画面切替	5	5	button	indigo1	none	[image:chenge]	1	1	52	38		function						
+運転士	210	175	button	indigo1	none	運転士	2	2	190	250		function	transition	D00AA				
 車掌	400	175	button	indigo1	none	車　掌	2	2	190	250		function	transition	C00AA				

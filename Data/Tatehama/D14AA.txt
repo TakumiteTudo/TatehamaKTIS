@@ -1,0 +1,25 @@
+name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonType	function1	variable1	function2	variable2	function3	variable3
+上下基礎読込	0	0	include	none	none	_TMPA												
+黒背景	0	100	box	none	base1				800	350								
+																		
+画面番号	25	66	text	lightgray	none	D14TH	1	1										
+画面名称	102	66	text	lightgreen	none	館浜ＡＴＳ情報	2	1										
+																		
+バージョン情報枠	20	348	box	lightgray	none				185	23								
+バージョン情報	50	351	text	white	none	バージョン情報	1	1										
+バージョン内容枠	20	370	box	lightgray	none				185	65								
+バージョン内容	23	373	text	white	none	１．０．\n２０２５１２０４．１\nＰｒｏｄ　 ｽﾀﾝﾄﾞｱﾛｰﾝ	1	1										
+																		
+Br動作原因枠	235	115	box	lightgray	none				545	23								
+Br動作原因	436	118	text	white	none	ブレーキ動作要因	1	1										
+Br動作原因内容枠	235	137	box	lightgray	none				545	128								
+Br動作原因内容	238	140	text	white	none	６８５：伝送部初期化失敗\n７８６：通信部初期化失敗\n３９６：継電部―検査記録部伝送不能\n３９７：通信部―検査記録部伝送不能	1	1										
+																		
+参考情報枠	235	285	box	lightgray	none				545	23								
+参考情報	472	288	text	white	none	参考情報	1	1										
+参考情報内容枠	235	307	box	lightgray	none				545	128								
+参考情報内容	238	310	text	white	none	＜７８６＞運転禁止。司令経由で信号通信部に連絡。\n＜３９６＞ＡＴＳ開放にて走行。\n＜３９７＞ＡＴＳ開放にて走行。\n＜６８５＞ＡＴＳ表示器異常がなければ運転支障なし。	1	1										
+																		
+運転士メニュー	10	505	button	indigo1	none	運転士\nメニュー	1	1	90	65		function	transition	D00AA				
+運転情報画面	110	505	button	indigo1	none	運転情報\n画面	1	1	90	65		function	transition	D01AC				
+応急マニュアル	210	505	button	indigo1	none	応急マニ\nュアル	1	1	90	65		function	transition	B00AA				

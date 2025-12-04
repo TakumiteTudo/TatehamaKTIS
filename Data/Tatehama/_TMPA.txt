@@ -1,12 +1,22 @@
 name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonType	function1	variable1	function2	variable2	function3	variable3
 上部背景	0	0	box	none	base1				800	63								
 中央背景	0	63	box	none	base2				800	437								
+下部背景	0	500	box	none	base1				800	100								
 時刻基礎	1	1	text	lightgray	none	　時刻　　　時　　分　　秒	1	1										
-時刻	73	1	text	white	none	１２　３４　５６	1	1										
+時刻	73	1	text	white	none	　６　０１　２３	1	1										
 速度基礎	1	21	text	lightgray	none	　速度　　　　　　　　ｋｍ／ｈ	1	1										
-速度	144	21	text	white	none	２５５	1	1										
+速度	73	21	text	white	none	　　　　　　０	1	1										
 キロ程基礎	1	41	text	lightgray	none	キロ程　　　　　　　　ｋｍ	1	1										
-キロ程	73	41	text	white	none	　　１２３．０	1	1										
+キロ程	73	41	text	white	none	　　　　０．０	1	1										
 上部区切り	270	0	box	none	base2				2	63								
+																		
+共通メッセージ上1枠	467	9	box	none	darkgray				230	20								
+共通メッセージ上2枠	467	34	box	none	darkgray				230	20								
+																		
+																		
 初期選択背景	700	0	box	none	base2				100	63								
 初期選択	705	5	button	indigo1	none	初期選択	1	1	90	55		function	transition	S00AB				
+																		
+共通メッセージ下1枠	414	505	box	none	darkgray				284	20								
+共通メッセージ下2枠	414	530	box	none	darkgray				284	20								
+共通メッセージ下3枠	414	555	box	none	darkgray				284	20								

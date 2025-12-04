@@ -1,0 +1,13 @@
+name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonType	function1	variable1	function2	variable2	function3	variable3
+上下基礎読込	0	0	include	none	none	_TMPA												
+																		
+画面番号	25	66	text	lightgray	none	C00AA	1	1										
+画面名称	102	66	text	lightgreen	none	車掌メニュー	2	1										
+																		
+車掌情報	120	105	button	indigo1	none	車 掌 情 報	1	2	240	65		function	transition	C01AA				
+サービス機器制御	120	205	button	indigo1	none	サービス機器制御	1	2	240	65		function	transition	C03AA				
+メディア表示器状態	120	305	button	indigo1	none	メディア表示器状態	1	2	240	65		function	transition	C11AA				
+運行情報	120	405	button	indigo1	none	運 行 情 報	1	2	240	65		function	transition	C05AA				
+行先・列番設定	440	105	button	indigo1	none	行先・列番設定	1	2	240	65		function	transition	C02AA				
+案内設定	440	205	button	indigo1	none	案 内 設 定	1	2	240	65		function	transition	C07AA				
+メニュー放送	440	305	button	indigo1	none	メニュー放送	1	2	240	65		function	transition	C18AA				
