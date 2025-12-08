@@ -11,6 +11,7 @@ namespace TatehamaKTIS.Display
 {
     internal class DisplayBuilder
     {
+        private DisplayData displayData;
         internal List<DisplaySegmentData> displaySegmentDatas { get; set; }
         private Dictionary<string, ButtonConfig> buttonConfigs = new Dictionary<string, ButtonConfig>();
         CharService charService;
@@ -20,10 +21,11 @@ namespace TatehamaKTIS.Display
         private Bitmap? previousImage;
         private List<DisplaySegmentData> previousDisplaySegmentDatas { get; set; }
 
-        internal DisplayBuilder()
+        internal DisplayBuilder(DisplayData displayData)
         {
+            this.displayData = displayData;
             charService = new CharService("Image/Char/font.bmp", "Image/Char/char.txt");
-            stringService = new StringService(charService);
+            stringService = new StringService(charService, displayData);
 
             displaySegmentDatas = new List<DisplaySegmentData>();
             previousDisplaySegmentDatas = new List<DisplaySegmentData>();
@@ -45,9 +47,7 @@ namespace TatehamaKTIS.Display
             {
                 return previousImage;
             }
-            Debug.WriteLine($"filter：{DateTime.Now:O}");
             Bitmap canvas = getDisplayImage(filter);
-            Debug.WriteLine($"canvas：{DateTime.Now:O}");
 
             // 前回の画像と合成
             if (previousImage != null)
@@ -61,16 +61,13 @@ namespace TatehamaKTIS.Display
             {
                 previousImage = (Bitmap)canvas.Clone();
             }
-            Debug.WriteLine($"previousImage：{DateTime.Now:O}");
             previousDisplaySegmentDatas = displaySegmentDatas.Select(segment => segment.DeepCopy()).ToList(); // DeepCopy を使用   
-            Debug.WriteLine($"DeepCopy：{DateTime.Now:O}");
             return (Bitmap)previousImage.Clone();
         }
 
         internal Bitmap BuildDisplayImageDiff(List<DisplaySegmentData> displaySegmentData)
         {
             Bitmap canvas = getDisplayImage(displaySegmentData);
-            Debug.WriteLine($"canvas：{DateTime.Now:O}");
 
             // 前回の画像と合成
             if (previousImage != null)
@@ -84,9 +81,7 @@ namespace TatehamaKTIS.Display
             {
                 previousImage = (Bitmap)canvas.Clone();
             }
-            Debug.WriteLine($"previousImage：{DateTime.Now:O}");
             previousDisplaySegmentDatas = displaySegmentDatas.Select(segment => segment.DeepCopy()).ToList(); // DeepCopy を使用   
-            Debug.WriteLine($"DeepCopy：{DateTime.Now:O}");
             return (Bitmap)previousImage.Clone();
         }
 
@@ -362,7 +357,7 @@ namespace TatehamaKTIS.Display
 
                 // テキストをボタン中央に配置
                 int textX = buttonSegment.x + (buttonWidth - textImage.Width) / 2;
-                int textY = buttonSegment.y + (buttonHeight - textImage.Height) / 2;
+                int textY = buttonSegment.y + (buttonHeight - textImage.Height) / 2 - 1;
                 g.DrawImage(textImage, textX, textY);
             }
         }

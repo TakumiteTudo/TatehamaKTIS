@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using TatehamaKTIS.Display;
 
 namespace TatehamaKTIS.Font
 {
     internal class StringService
     {
-        CharService charService;
-        public StringService(CharService charService)
+        private readonly CharService charService;
+        private readonly DisplayData displayData;
+
+        public StringService(CharService charService, DisplayData displayData)
         {
             this.charService = charService;
+            this.displayData = displayData;
         }
 
         public Bitmap GetLCDFontImageByString(string str, int letterSpacing = 1, bool isVertical = false, Color color = default, Color basecolor = default, int scalarX = 1, int scalarY = 1, int lineSpacing = 3)
@@ -24,6 +26,7 @@ namespace TatehamaKTIS.Font
             // 各文字の画像を取得
             int currentScalarX = scalarX;
             int currentScalarY = scalarY;
+            int currentLineSpacing = lineSpacing; // 現在の行間
             bool scalingActive = false;
 
             // 初期の結合画像サイズ
@@ -57,6 +60,59 @@ namespace TatehamaKTIS.Font
                     currentScalarX = scalarX;
                     currentScalarY = scalarY;
                     scalingActive = false;
+                }
+                else if (token.StartsWith("[lh:") && token.EndsWith("]"))
+                {
+                    // 行間変更制御文字の処理
+                    string lineSpacingValue = token.Substring(4, token.Length - 5);
+                    if (int.TryParse(lineSpacingValue, out int newLineSpacing))
+                    {
+                        currentLineSpacing = newLineSpacing;
+                    }
+                }
+                else if (token == "[lh]")
+                {
+                    // 行間をデフォルト値に戻す
+                    currentLineSpacing = lineSpacing;
+                }
+                else if (token.StartsWith("[var:") && token.EndsWith("]"))
+                {
+                    // 変数代入制御文字の処理
+                    string variableName = token.Substring(5, token.Length - 6);
+                    string variableValue = displayData[variableName]; // DisplayData から値を取得
+                    foreach (char c in variableValue)
+                    {
+                        Bitmap charBitmap = charService.GetLCDFontImageByChar(c.ToString());
+                        charBitmap = ScaleBitmap(charBitmap, currentScalarX, currentScalarY);
+
+                        // 必要に応じて結合画像を拡張
+                        int newWidth = Math.Max(totalWidth, offsetX + charBitmap.Width);
+                        int newHeight = Math.Max(totalHeight, offsetY + charBitmap.Height);
+
+                        if (newWidth > combinedImage.Width || newHeight > combinedImage.Height)
+                        {
+                            Bitmap newCombinedImage = new Bitmap(newWidth, newHeight);
+                            using (Graphics newGraphics = Graphics.FromImage(newCombinedImage))
+                            {
+                                newGraphics.Clear(basecolor);
+                                newGraphics.DrawImage(combinedImage, 0, 0); // 既存の画像をコピー
+                            }
+                            combinedImage.Dispose();
+                            combinedImage = newCombinedImage;
+                            g.Dispose();
+                            g = Graphics.FromImage(combinedImage); // 新しい Graphics オブジェクトを作成
+                        }
+
+                        // 文字色を適用
+                        Bitmap coloredBmp = ApplyColorToBitmap(charBitmap, color);
+
+                        // 文字を描画
+                        g.DrawImage(coloredBmp, new Point(offsetX, offsetY));
+                        offsetX += charBitmap.Width + (letterSpacing * currentScalarX);
+                        maxLineHeight = Math.Max(maxLineHeight, charBitmap.Height);
+                        totalWidth = combinedImage.Width;
+                        totalHeight = combinedImage.Height;
+                    }
                 }
                 else
                 {
@@ -106,7 +162,7 @@ namespace TatehamaKTIS.Font
                         if (i < lines.Length - 1)
                         {
                             offsetX = 0;
-                            offsetY += maxLineHeight + (lineSpacing * currentScalarY);
+                            offsetY += maxLineHeight + (currentLineSpacing * currentScalarY);
                             maxLineHeight = 0;
                         }
                     }
