@@ -11,10 +11,12 @@ namespace TatehamaKTIS.Display
 {
     internal class SegmentReader
     {
+        private DisplayData displayData;
         private readonly Dictionary<string, Color> colorMap = new Dictionary<string, Color>();
 
-        public SegmentReader()
+        public SegmentReader(DisplayData displayData)
         {
+            this.displayData = displayData;
         }
 
         public List<DisplaySegmentData> ReadSegmentsFromFile(string filePath)
@@ -33,9 +35,11 @@ namespace TatehamaKTIS.Display
                 throw new InvalidDataException("ファイルにデータ行が含まれていません。");
             }
 
-            // ヘッダ行をスキップしてデータ行を処理
-            foreach (var line in lines.Skip(1))
+            var lineStack = new Stack<string>(); // 入れ子の if を処理するためのスタック
+
+            for (int i = 1; i < lines.Length; i++) // ヘッダ行をスキップ
             {
+                var line = lines[i];
                 try
                 {
                     var fields = line.Split('\t');
@@ -50,6 +54,78 @@ namespace TatehamaKTIS.Display
                     {
                         continue;
                     }
+
+                    // if セグメントの処理
+                    if (fields[3] == "if")
+                    {
+                        string condition = fields[6];
+                        bool conditionResult = EvaluateCondition(condition);
+
+                        if (conditionResult)
+                        {
+                            lineStack.Push("if"); // 条件が適合する場合、処理を続行
+                        }
+                        else
+                        {
+                            // 条件が適合しない場合、対応する終了セグメントまでスキップ
+                            int skipCount = 1;
+                            while (skipCount > 0 && ++i < lines.Length)
+                            {
+                                var skipFields = lines[i].Split('\t');
+                                if (skipFields[3] == "if") skipCount++;
+                                else if (skipFields[3] == "end") skipCount--;
+                            }
+                        }
+                        continue;
+                    }
+
+                    // 終了セグメントの処理
+                    if (fields[3] == "end")
+                    {
+                        if (lineStack.Count > 0 && lineStack.Peek() == "if")
+                        {
+                            lineStack.Pop(); // 対応する if をスタックから削除
+                        }
+                        continue;
+                    }
+
+                    // ボタン設定セグメントの処理
+                    if (fields[3] == "buttonConfig")
+                    {
+                        string targetButtonName = fields[6];
+
+                        // 対象のボタンを検索
+                        var targetButton = segments.OfType<ButtonSegment>().FirstOrDefault(b => b.name == targetButtonName);
+                        if (targetButton == null)
+                        {
+                            Debug.WriteLine($"ボタン設定セグメント: 対象のボタンが見つかりません: {targetButtonName}");
+                            continue;
+                        }
+
+                        // isChecked の設定
+                        if (int.TryParse(fields[1], out int isCheckedValue) && (isCheckedValue == 0 || isCheckedValue == 1))
+                        {
+                            targetButton.isChecked = isCheckedValue == 1;
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"ボタン設定セグメント: isChecked の値が無効です: {fields[1]}");
+                        }
+
+                        // isLighting の設定
+                        if (int.TryParse(fields[2], out int isLightingValue))
+                        {
+                            targetButton.isLighting = isLightingValue;
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"ボタン設定セグメント: isLighting の値が無効です: {fields[2]}");
+                        }
+
+                        continue;
+                    }
+
+                    // 他のセグメントの処理（既存のロジック）
                     int x = int.Parse(fields[1]);
                     int y = int.Parse(fields[2]);
                     if (!Enum.TryParse(fields[3], true, out DisplaySegmentType type))
@@ -102,11 +178,11 @@ namespace TatehamaKTIS.Display
 
                             // 関数リストを作成
                             var functionList = new List<Tuple<string, string>>();
-                            for (int i = 13; i < fields.Length; i += 2)
+                            for (int j = 13; j < fields.Length; j += 2)
                             {
-                                if (i + 1 < fields.Length && !string.IsNullOrWhiteSpace(fields[i]) && !string.IsNullOrWhiteSpace(fields[i + 1]))
+                                if (j + 1 < fields.Length && !string.IsNullOrWhiteSpace(fields[j]) && !string.IsNullOrWhiteSpace(fields[j + 1]))
                                 {
-                                    functionList.Add(new Tuple<string, string>(fields[i], fields[i + 1]));
+                                    functionList.Add(new Tuple<string, string>(fields[j], fields[j + 1]));
                                 }
                             }
 
@@ -135,6 +211,173 @@ namespace TatehamaKTIS.Display
             return segments;
         }
 
+        private bool EvaluateCondition(string condition)
+        {
+            // 条件式を評価するロジックを実装
+            // 例: "var1 == 10 && (var2 != 20 || var3 > 5)"
+            // トークンに分割し、スタックを使用して評価する
+            var tokens = TokenizeCondition(condition);
+            var postfix = ConvertToPostfix(tokens);
+            return EvaluatePostfix(postfix);
+        }
+
+        private List<string> TokenizeCondition(string condition)
+        {
+            // 条件式をトークンに分割する
+            // 例: "var1 == 10 && var2 != 20" -> ["var1", "==", "10", "&&", "var2", "!=", "20"]
+            // 実装は省略
+            return new List<string>();
+        }
+
+        private List<string> ConvertToPostfix(List<string> tokens)
+        {
+            var output = new List<string>();
+            var operators = new Stack<string>();
+
+            // 演算子の優先順位
+            var precedence = new Dictionary<string, int>
+            {
+                { "||", 1 },
+                { "&&", 2 },
+                { "==", 3 }, { "!=", 3 }, { ">", 3 }, { "<", 3 }, { ">=", 3 }, { "<=", 3 },
+                { "(", 0 }, { ")", 0 }
+            };
+
+            foreach (var token in tokens)
+            {
+                if (IsOperand(token))
+                {
+                    output.Add(token); // オペランドはそのまま出力
+                }
+                else if (token == "(")
+                {
+                    operators.Push(token);
+                }
+                else if (token == ")")
+                {
+                    while (operators.Count > 0 && operators.Peek() != "(")
+                    {
+                        output.Add(operators.Pop());
+                    }
+                    operators.Pop(); // "(" を削除
+                }
+                else
+                {
+                    while (operators.Count > 0 && precedence[operators.Peek()] >= precedence[token])
+                    {
+                        output.Add(operators.Pop());
+                    }
+                    operators.Push(token);
+                }
+            }
+
+            while (operators.Count > 0)
+            {
+                output.Add(operators.Pop());
+            }
+
+            return output;
+        }
+
+        private bool EvaluatePostfix(List<string> postfix)
+        {
+            var stack = new Stack<object>();
+
+            foreach (var token in postfix)
+            {
+                if (IsOperand(token))
+                {
+                    stack.Push(GetOperandValue(token));
+                }
+                else
+                {
+                    var right = stack.Pop();
+                    var left = stack.Pop();
+                    stack.Push(EvaluateOperator(left, right, token));
+                }
+            }
+
+            return Convert.ToBoolean(stack.Pop());
+        }
+
+        private object GetOperandValue(string operand)
+        {
+            // 変数の場合は DisplayData から取得
+            if (displayData.GetAllData().TryGetValue(operand, out var value))
+            {
+                return ParseDynamicValue(value);
+            }
+
+            // リテラル値の場合
+            return ParseDynamicValue(operand);
+        }
+
+        private object ParseDynamicValue(string value)
+        {
+            // 全角数値を半角数値に変換
+            value = ConvertFullWidthToHalfWidth(value);
+
+            // 数値として解釈可能かチェック
+            if (int.TryParse(value, out var intValue))
+            {
+                return intValue;
+            }
+            if (double.TryParse(value, out var doubleValue))
+            {
+                return doubleValue;
+            }
+
+            // それ以外は文字列として扱う
+            return value;
+        }
+
+        private string ConvertFullWidthToHalfWidth(string input)
+        {
+            var sb = new StringBuilder();
+            foreach (var c in input)
+            {
+                // 全角数値（U+FF10～U+FF19）を半角数値（U+0030～U+0039）に変換
+                if (c >= '０' && c <= '９')
+                {
+                    sb.Append((char)(c - '０' + '0'));
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+            return sb.ToString();
+        }
+
+        private bool EvaluateOperator(object left, object right, string op)
+        {
+            // 動的型変換
+            if (left is string leftStr && right is string rightStr)
+            {
+                left = ParseDynamicValue(leftStr);
+                right = ParseDynamicValue(rightStr);
+            }
+
+            switch (op)
+            {
+                case "==": return Equals(left, right);
+                case "!=": return !Equals(left, right);
+                case ">": return Convert.ToDouble(left) > Convert.ToDouble(right);
+                case "<": return Convert.ToDouble(left) < Convert.ToDouble(right);
+                case ">=": return Convert.ToDouble(left) >= Convert.ToDouble(right);
+                case "<=": return Convert.ToDouble(left) <= Convert.ToDouble(right);
+                case "&&": return Convert.ToBoolean(left) && Convert.ToBoolean(right);
+                case "||": return Convert.ToBoolean(left) || Convert.ToBoolean(right);
+                default: throw new InvalidOperationException($"不明な演算子: {op}");
+            }
+        }
+
+        private bool IsOperand(string token)
+        {
+            // オペランド（変数名またはリテラル値）かどうかを判定
+            return !new[] { "||", "&&", "==", "!=", ">", "<", ">=", "<=", "(", ")" }.Contains(token);
+        }
+
         public void LoadColorConfigFromDictionary(Dictionary<string, string> colorConfig)
         {
             colorMap.Clear();
@@ -156,48 +399,6 @@ namespace TatehamaKTIS.Display
                 else
                 {
                     Debug.WriteLine($"無効な色コード: {colorValue}");
-                }
-            }
-        }
-
-        private void LoadColorConfig(string colorConfigPath)
-        {
-            if (!File.Exists(colorConfigPath))
-            {
-                throw new FileNotFoundException($"色設定ファイルが見つかりません: {colorConfigPath}");
-            }
-
-            var lines = File.ReadAllLines(colorConfigPath);
-
-            foreach (var line in lines)
-            {
-                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("["))
-                {
-                    continue; // 空行やセクションヘッダをスキップ
-                }
-
-                var parts = line.Split('=');
-                if (parts.Length != 2)
-                {
-                    throw new InvalidDataException($"色設定ファイルの形式が正しくありません: {line}");
-                }
-
-                string colorName = parts[0].Trim();
-                string colorValue = parts[1].Trim();
-
-                // "0x" プレフィックスを削除
-                if (colorValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
-                {
-                    colorValue = colorValue.Substring(2);
-                }
-
-                if (int.TryParse(colorValue, System.Globalization.NumberStyles.HexNumber, null, out int argb))
-                {
-                    colorMap[colorName] = Color.FromArgb(unchecked((int)argb));
-                }
-                else
-                {
-                    throw new InvalidDataException($"無効な色コード: {colorValue}");
                 }
             }
         }

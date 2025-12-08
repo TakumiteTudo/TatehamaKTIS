@@ -14,6 +14,7 @@ namespace TatehamaKTIS.Display
 {
     internal class DisplayManager
     {
+        DisplayData DisplayData;
         string displayType;
         string displayName;
         Dictionary<string, Dictionary<string, string>> displayConfig;
@@ -30,9 +31,6 @@ namespace TatehamaKTIS.Display
 
         internal DisplayManager()
         {
-            displayBuilder = new DisplayBuilder();
-            segmentReader = new SegmentReader();
-            DisplayUpdate();
             SetDisplayType("Tatehama");
             minTouchInterval = TimeSpan.FromMilliseconds(100);
 
@@ -42,12 +40,13 @@ namespace TatehamaKTIS.Display
 
         internal async Task SetDisplayType(string type)
         {
-            displayBuilder = new DisplayBuilder();
-            segmentReader = new SegmentReader();
+            DisplayData = new DisplayData();
+            displayBuilder = new DisplayBuilder(DisplayData);
+            segmentReader = new SegmentReader(DisplayData);
             displayType = type;
             displayConfig = ParseConfig();
             ConfigureSegmentReaderColors(); // 色設定を行う          
-            minTouchInterval = TimeSpan.FromMilliseconds(100);
+            minTouchInterval = TimeSpan.FromMilliseconds(80);
 
             await RunStartSequence();
         }
@@ -135,7 +134,7 @@ namespace TatehamaKTIS.Display
                     finally
                     {
                         operationSemaphore.Release();
-                        await Task.Delay(minTouchInterval);
+                        await Task.Delay(50);
                     }
                 }
             }
@@ -176,11 +175,9 @@ namespace TatehamaKTIS.Display
             }
             lastTouchTime = DateTime.Now; // 最後のタッチ時刻を更新
 
-            Debug.WriteLine($"タッチ：{x}, {y}");
             var button = DetectButtonTouch(x, y);
             if (button != null)
             {
-                Debug.WriteLine($"ボタン離：{button.name}");
                 if (button.buttonType == ButtonType.function)
                 {
                     button.isChecked = false;
