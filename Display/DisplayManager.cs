@@ -16,7 +16,6 @@ namespace TatehamaKTIS.Display
     {
         DisplayData DisplayData;
         string displayType;
-        string displayName;
         Dictionary<string, Dictionary<string, string>> displayConfig;
         DisplayBuilder displayBuilder;
         SegmentReader segmentReader;
@@ -143,7 +142,6 @@ namespace TatehamaKTIS.Display
         // タッチダウン処理
         private async Task HandleTouchDownAsync(int x, int y)
         {
-            Debug.WriteLine($"タッチ：{DateTime.Now:O}");
             var timeSinceLastTouch = DateTime.Now - lastTouchTime;
             if (timeSinceLastTouch < minTouchInterval)
             {
@@ -157,11 +155,12 @@ namespace TatehamaKTIS.Display
             if (button != null)
             {
                 Debug.WriteLine($"ボタン押：{button.name}");
-                button.isChecked = !button.isChecked;
+                if (button.buttonType != ButtonType.checkbox)
+                {
+                    button.isChecked = !button.isChecked;
+                    DisplayUpdateDiff([button]);
+                }
             }
-            Debug.WriteLine($"DisplayUpdateDiff：{DateTime.Now:O}");
-            DisplayUpdateDiff([button]);
-            Debug.WriteLine($"タッチ終：{DateTime.Now:O}");
         }
 
         // タッチアップ処理
@@ -178,35 +177,47 @@ namespace TatehamaKTIS.Display
             var button = DetectButtonTouch(x, y);
             if (button != null)
             {
-                if (button.buttonType == ButtonType.function)
+                foreach (var func in button.functionList)
                 {
-                    button.isChecked = false;
-                    foreach (var func in button.functionList)
+                    Debug.WriteLine($"関数実行: {func.Item1} パラメータ: {func.Item2}");
+                    switch (func.Item1)
                     {
-                        Debug.WriteLine($"関数実行: {func.Item1} パラメータ: {func.Item2}");
-                        switch (func.Item1)
-                        {
-                            case "transition":
-                                var newDisplayName = func.Item2;
-                                Debug.WriteLine($"画面遷移: {newDisplayName}");
-                                try
+                        case "assignment":
+                            HandleAssignment(func.Item2);
+                            break;
+
+                        case "exclusive":
+                            HandleExclusive(button.groupname, button);
+                            break;
+
+                        case "buttonConfig":
+                            HandleButtonConfig(func.Item2);
+                            break;
+
+                        case "transition":
+                            var newDisplayName = func.Item2;
+                            Debug.WriteLine($"画面遷移: {newDisplayName}");
+                            try
+                            {
+                                var newSegments = segmentReader.ReadSegmentsFromFile($"Data/Tatehama/{newDisplayName}.txt");
+                                if (newSegments != null && newSegments.Count > 0)
                                 {
-                                    var newSegments = segmentReader.ReadSegmentsFromFile($"Data/Tatehama/{newDisplayName}.txt");
-                                    if (newSegments != null && newSegments.Count > 0)
-                                    {
-                                        displayBuilder.displaySegmentDatas = newSegments;
-                                    }
+                                    displayBuilder.displaySegmentDatas = newSegments;
                                 }
-                                catch (FileNotFoundException ex)
-                                {
-                                    Debug.WriteLine($"画面未定義：{newDisplayName}");
-                                }
-                                break;
-                        }
+                            }
+                            catch (FileNotFoundException ex)
+                            {
+                                Debug.WriteLine($"画面未定義：{newDisplayName}");
+                            }
+                            break;
                     }
                 }
+                if (button.buttonType != ButtonType.checkbox)
+                {
+                    button.isChecked = false;
+                }
+                DisplayUpdateDiff([button]);
             }
-            DisplayUpdateDiff([button]);
         }
 
         public ButtonSegment? DetectButtonTouch(int touchX, int touchY)
@@ -270,6 +281,106 @@ namespace TatehamaKTIS.Display
             }
 
             return configData;
+        }
+        private void HandleAssignment(string parameter)
+        {
+            // '=' を中心に分割し、前後の空白を削除
+            var parts = parameter.Split(new[] { '=' }, 2, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length != 2)
+            {
+                Debug.WriteLine($"無効な assignment パラメータ: {parameter}");
+                return;
+            }
+
+            string left = parts[0].Trim(); // 左辺の変数名
+            string right = parts[1].Trim(); // 右辺の値または変数名
+
+            if (right.StartsWith("'") && right.EndsWith("'"))
+            {
+                // <変数> = '<値>'
+                string value = right.Trim('\'');
+                DisplayData[left] = value;
+            }
+            else if (right.StartsWith("group."))
+            {
+                // <変数> = group.<ボタングループ名>
+                string groupName = right.Substring(6);
+                var checkedButtons = displayBuilder.displaySegmentDatas
+                    .OfType<ButtonSegment>()
+                    .Where(b => b.groupname == groupName && b.isChecked)
+                    .Select(b => b.name);
+
+                DisplayData[left] = string.Join(",", checkedButtons);
+            }
+            else
+            {
+                // <変数> = <変数>
+                if (DisplayData.GetAllData().TryGetValue(right, out var value))
+                {
+                    DisplayData[left] = value;
+                }
+                else
+                {
+                    Debug.WriteLine($"変数が見つかりません: {right}");
+                }
+            }
+        }
+
+        private void HandleExclusive(string groupName, ButtonSegment currentButton)
+        {
+            var buttonsInGroup = displayBuilder.displaySegmentDatas
+                .OfType<ButtonSegment>()
+                .Where(b => b.groupname == groupName);
+
+            foreach (var button in buttonsInGroup)
+            {
+                if (button == currentButton)
+                {
+                    // 自分自身のボタンは isChecked を true に設定
+                    button.isChecked = true;
+                }
+                else
+                {
+                    // 他のボタンは isChecked を false に設定
+                    button.isChecked = false;
+                }
+            }
+        }
+
+        private void HandleButtonConfig(string parameter)
+        {
+            var parts = parameter.Split(':');
+            if (parts.Length != 2)
+            {
+                Debug.WriteLine($"無効な buttonConfig パラメータ: {parameter}");
+                return;
+            }
+
+            string buttonName = parts[0].Trim();
+            var config = parts[1].Trim().Split(',');
+
+            var targetButton = displayBuilder.displaySegmentDatas
+                .OfType<ButtonSegment>()
+                .FirstOrDefault(b => b.name == buttonName);
+
+            if (targetButton == null)
+            {
+                Debug.WriteLine($"ボタンが見つかりません: {buttonName}");
+                return;
+            }
+
+            if (config.Length >= 2 &&
+                int.TryParse(config[0].ToString(), out int isCheckedValue) &&
+                int.TryParse(config[1].ToString(), out int isLightingValue))
+            {
+                targetButton.isChecked = isCheckedValue == 1;
+                targetButton.isLighting = isLightingValue;
+            }
+            else
+            {
+                Debug.WriteLine($"無効なボタン設定: {config}");
+            }
+            DisplayUpdateDiff([targetButton]);
         }
 
         private void ConfigureSegmentReaderColors()

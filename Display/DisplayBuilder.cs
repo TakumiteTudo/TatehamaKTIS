@@ -189,7 +189,7 @@ namespace TatehamaKTIS.Display
                            button1.sizeY == button2.sizeY &&
                            button1.buttonColor == button2.buttonColor &&
                            button1.isChecked == button2.isChecked &&
-                           button1.isLighting == button2.isLighting || button1.isLighting > 0;
+                           button1.isLighting == button2.isLighting && button1.isLighting <= 0;
 
                 case ImageSegment image1 when segment2 is ImageSegment image2:
                     return image1.filename == image2.filename;
@@ -263,7 +263,8 @@ namespace TatehamaKTIS.Display
         private void DrawButtonSegment(Graphics g, ButtonSegment buttonSegment)
         {
             // ボタン画像のファイル名を取得
-            string buttonImagePath = GetButtonImageFileName(buttonSegment);
+            bool isNowLighting = GetButtonisNowLighting(buttonSegment);
+            string buttonImagePath = GetButtonImageFileName(buttonSegment, isNowLighting);
 
             if (!File.Exists(buttonImagePath))
             {
@@ -347,8 +348,8 @@ namespace TatehamaKTIS.Display
                     letterSpacing: 1,
                     isVertical: false,
                     color: buttonSegment.isChecked
-                        ? (buttonSegment.isLighting != 0 ? config.TextCTL : config.TextCT)
-                        : (buttonSegment.isLighting != 0 ? config.TextCFL : config.TextCF),
+                        ? (isNowLighting ? config.TextCTL : config.TextCT)
+                        : (isNowLighting ? config.TextCFL : config.TextCF),
                     basecolor: Color.Transparent,
                     scalarX: buttonSegment.scalarX,
                     scalarY: buttonSegment.scalarY,
@@ -362,7 +363,28 @@ namespace TatehamaKTIS.Display
             }
         }
 
-        private string GetButtonImageFileName(ButtonSegment buttonSegment)
+        private bool GetButtonisNowLighting(ButtonSegment buttonSegment)
+        {
+            // 点灯状態を確認
+            if (buttonSegment.isLighting == -1)
+            {
+                return true;
+            }
+            else if (buttonSegment.isLighting > 0)
+            {
+                // 点滅状態を計算
+                TimeSpan elapsedTime = DateTime.Now - buttonSegment.originTime;
+                bool isCurrentlyLit = (elapsedTime.TotalMilliseconds % (buttonSegment.isLighting * 2)) < buttonSegment.isLighting;
+
+                if (isCurrentlyLit)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private string GetButtonImageFileName(ButtonSegment buttonSegment, bool isNowLighting)
         {
             // ボタンの状態に応じたファイル名を生成
             string baseName = buttonSegment.buttonColor; // ボタンの色名を基にする
@@ -379,20 +401,9 @@ namespace TatehamaKTIS.Display
             }
 
             // 点灯状態を確認
-            if (buttonSegment.isLighting == -1)
+            if (isNowLighting)
             {
                 stateSuffix += "l";
-            }
-            else if (buttonSegment.isLighting > 0)
-            {
-                // 点滅状態を計算
-                TimeSpan elapsedTime = DateTime.Now - buttonSegment.originTime;
-                bool isCurrentlyLit = (elapsedTime.TotalMilliseconds % (buttonSegment.isLighting * 2)) < buttonSegment.isLighting;
-
-                if (isCurrentlyLit)
-                {
-                    stateSuffix += "l";
-                }
             }
 
             // ファイル名を組み立てる

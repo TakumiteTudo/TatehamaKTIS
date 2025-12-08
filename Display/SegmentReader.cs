@@ -55,13 +55,32 @@ namespace TatehamaKTIS.Display
                         continue;
                     }
 
+                    // transition セグメントの処理
+                    if (fields[3] == "transition")
+                    {
+                        string targetScreen = fields[6];
+                        Debug.WriteLine($"画面遷移: {targetScreen}");
+
+                        string targetFilePath = Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, targetScreen + ".txt");
+                        if (File.Exists(targetFilePath))
+                        {
+                            // 再帰的に新しい画面を読み込む
+                            return ReadSegmentsFromFile(targetFilePath);
+                        }
+                        else
+                        {
+                            throw new FileNotFoundException($"遷移先の画面ファイルが見つかりません: {targetFilePath}");
+                        }
+                    }
+
                     // if セグメントの処理
                     if (fields[3] == "if")
                     {
                         string condition = fields[6];
+                        Debug.WriteLine($"　　評価：{condition}");
                         bool conditionResult = EvaluateCondition(condition);
 
-                        Debug.WriteLine($"　　評価：{condition}　結果：{conditionResult}");
+                        Debug.WriteLine($"　　結果：{conditionResult}");
                         if (conditionResult)
                         {
                             lineStack.Push("if"); // 条件が適合する場合、処理を続行
@@ -140,7 +159,8 @@ namespace TatehamaKTIS.Display
                     if (fields[3] == "variable")
                     {
                         string variableName = fields[0]; // 変数名
-                        string variableValue = fields[6]; // 変数の値
+                        string variableValue = fields[6]; // 変数の値  
+                        Debug.WriteLine($"　代入：{variableName} = {variableValue}");
 
                         // [var:<変数名>] の形式の場合、DisplayData から値を取得
                         if (variableValue.StartsWith("[var:") && variableValue.EndsWith("]"))
@@ -294,6 +314,12 @@ namespace TatehamaKTIS.Display
                         tokens.Add($"{c}{condition[i + 1]}");
                         i++; // 2文字目をスキップ
                     }
+                    else if (c == '!' && i + 1 < condition.Length && condition[i + 1] == '(')
+                    {
+                        // "!(" の形式を1つのトークンとして扱う
+                        tokens.Add("!(");
+                        i++; // '(' をスキップ
+                    }
                     else
                     {
                         tokens.Add(c.ToString());
@@ -310,6 +336,7 @@ namespace TatehamaKTIS.Display
                 tokens.Add(sb.ToString());
             }
 
+            //Debug.WriteLine(string.Join(",", tokens));
             return tokens;
         }
 
@@ -324,6 +351,7 @@ namespace TatehamaKTIS.Display
                 { "||", 1 },
                 { "&&", 2 },
                 { "==", 3 }, { "!=", 3 }, { ">", 3 }, { "<", 3 }, { ">=", 3 }, { "<=", 3 },
+                { "!(" , 4 }, // "!(" の優先順位を高く設定
                 { "(", 0 }, { ")", 0 }
             };
 
@@ -333,17 +361,26 @@ namespace TatehamaKTIS.Display
                 {
                     output.Add(token); // オペランドはそのまま出力
                 }
-                else if (token == "(")
+                else if (token == "(" || token == "!(")
                 {
                     operators.Push(token);
                 }
                 else if (token == ")")
                 {
-                    while (operators.Count > 0 && operators.Peek() != "(")
+                    while (operators.Count > 0 && operators.Peek() != "(" && operators.Peek() != "!(")
                     {
                         output.Add(operators.Pop());
                     }
-                    operators.Pop(); // "(" を削除
+
+                    // "!(" の場合は特別処理
+                    if (operators.Count > 0 && operators.Peek() == "!(")
+                    {
+                        output.Add(operators.Pop());
+                    }
+                    else if (operators.Count > 0 && operators.Peek() == "(")
+                    {
+                        operators.Pop(); // "(" を削除
+                    }
                 }
                 else
                 {
@@ -377,14 +414,27 @@ namespace TatehamaKTIS.Display
                     }
                     else
                     {
-                        if (stack.Count < 2)
+                        if (token == "!(")
                         {
-                            throw new InvalidOperationException($"条件式の評価中にスタックが不足しました。トークン: {token}");
-                        }
+                            if (stack.Count < 1)
+                            {
+                                throw new InvalidOperationException($"条件式の評価中にスタックが不足しました。トークン: {token}");
+                            }
 
-                        var right = stack.Pop();
-                        var left = stack.Pop();
-                        stack.Push(EvaluateOperator(left, right, token));
+                            var operand = stack.Pop();
+                            stack.Push(!Convert.ToBoolean(operand));
+                        }
+                        else
+                        {
+                            if (stack.Count < 2)
+                            {
+                                throw new InvalidOperationException($"条件式の評価中にスタックが不足しました。トークン: {token}");
+                            }
+
+                            var right = stack.Pop();
+                            var left = stack.Pop();
+                            stack.Push(EvaluateOperator(left, right, token));
+                        }
                     }
                 }
 
@@ -413,11 +463,12 @@ namespace TatehamaKTIS.Display
             // 変数の場合は DisplayData から取得
             if (displayData.GetAllData().TryGetValue(operand, out var value))
             {
+                Debug.WriteLine($"　　　オペランド取得: {operand} = {value}");
                 return ParseDynamicValue(value);
             }
 
             Debug.WriteLine($"オペランドが見つかりません: {operand}. DisplayData に存在しない可能性があります。");
-            return string.Empty; // デフォルト値を返す
+            return null; // 存在しない場合は null を返す
         }
 
         private object ParseDynamicValue(string value)
@@ -459,11 +510,34 @@ namespace TatehamaKTIS.Display
 
         private bool EvaluateOperator(object left, object right, string op)
         {
+            Debug.WriteLine($"　　　型変換: 左辺 = {left}, 右辺 = {right}, 演算子 = {op}");
+
             // 動的型変換
             if (left is string leftStr && right is string rightStr)
             {
                 left = ParseDynamicValue(leftStr);
                 right = ParseDynamicValue(rightStr);
+            }
+            else if (left is string leftStrOnly)
+            {
+                left = ParseDynamicValue(leftStrOnly);
+            }
+            else if (right is string rightStrOnly)
+            {
+                right = ParseDynamicValue(rightStrOnly);
+            }
+
+            Debug.WriteLine($"　　　型変換後 - 左辺 = {left} ({left?.GetType()}), 右辺 = {right} ({right?.GetType()})");
+
+            // null の処理
+            if (left == null || right == null)
+            {
+                switch (op)
+                {
+                    case "==": return left == right; // 両方 null の場合のみ true
+                    case "!=": return left != right; // どちらかが null の場合 true
+                    default: return false; // 他の演算子では false
+                }
             }
 
             switch (op)
@@ -483,7 +557,7 @@ namespace TatehamaKTIS.Display
         private bool IsOperand(string token)
         {
             // オペランド（変数名またはリテラル値）かどうかを判定
-            return !new[] { "||", "&&", "==", "!=", ">", "<", ">=", "<=", "(", ")" }.Contains(token);
+            return !new[] { "||", "&&", "==", "!=", ">", "<", ">=", "<=", "!(", "(", ")" }.Contains(token);
         }
 
         public void LoadColorConfigFromDictionary(Dictionary<string, string> colorConfig)
