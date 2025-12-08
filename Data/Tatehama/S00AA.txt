@@ -5,3 +5,14 @@ name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonT
 システム名	221	170	text	white	none	６０００形　ＫＴＩＳ	2	4										
 指示メッセージ1	167	280	text	cyan	none	ただいま準備中です。	2	2										
 指示メッセージ2	167	350	text	cyan	none	　　しばらくお待ち下さい。	2	2										
+																		
+_時刻全角			variable			１２　３４　５６												
+_速度全角			variable			　　０												
+_距離全角			variable			１２３５６．０												
+																		
+パターン番号			variable															
+運行路線名			variable			館浜本線												
+運行始発			variable			館　浜　												
+運行終着			variable			大　路　												
+運行種別			variable			準急３												
+運行備考			variable			～浜園：準急、浜園～：普通												

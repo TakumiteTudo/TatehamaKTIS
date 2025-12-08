@@ -3,11 +3,11 @@ name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonT
 中央背景	0	63	box	none	base2				800	437								
 下部背景	0	500	box	none	base1				800	100								
 時刻基礎	1	1	text	lightgray	none	　時刻　　　時　　分　　秒	1	1										
-時刻	73	1	text	white	none	　６　０１　２３	1	1										
+時刻	73	1	text	white	none	[var:_時刻全角]	1	1										
 速度基礎	1	21	text	lightgray	none	　速度　　　　　　　　ｋｍ／ｈ	1	1										
-速度	73	21	text	white	none	　　　　　　０	1	1										
+速度	145	21	text	white	none	[var:_速度全角]	1	1										
 キロ程基礎	1	41	text	lightgray	none	キロ程　　　　　　　　ｋｍ	1	1										
-キロ程	73	41	text	white	none	　　　　０．０	1	1										
+キロ程	73	41	text	white	none	[var:_距離全角]	1	1										
 上部区切り	270	0	box	none	base2				2	63								
 																		
 共通メッセージ上1枠	467	9	box	none	darkgray				230	20								

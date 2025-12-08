@@ -1,0 +1,30 @@
+name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonType	function1	variable1	function2	variable2	function3	variable3
+上下基礎読込	0	0	include	none	none	_TMPA												
+黒背景	0	147	box	none	base1				800	293								
+																		
+画面番号	25	66	text	lightgray	none	Y02AA	1	1										
+画面名称	102	66	text	lightgreen	none	運転通告詳細	2	1										
+																		
+司令番号基礎	30	86	text	lightgray	none	司令番号：	1	1										
+司令番号内容	120	86	text	cyan	none	館浜-23/1	2	1										
+受信者基礎	30	106	text	lightgray	none	受信者：	1	1										
+受信者	102	106	text	white	none	臨９６４２Ａ／運転士，車掌	2	1										
+表題基礎	30	126	text	lightgray	none	表　題：	1	1										
+表題	102	126	text	cyan	none	臨時列車運転	2	1										
+																		
+通告内容	65	150	text	white	none	東　井　　　　　　レ　　　　１７：０６．２０　３\n新大路　　１７：０８．１０　　　　　＝　　　　２\n　\n新大路で１６１２Ａに接続。\n折返　臨回９７４３列車予定。	1	1	
+																		
+受信時刻基礎	65	420	text	lightgray	none	［受信時刻：　時　分］	1	1										
+受信時刻	173	420	text	white	none	16　17	1	1										
+ページ数基礎	335	420	text	lightgray	none	（   ／   ）	1	1										
+現ページ数	353	420	text	white	none	  3	1	1										
+総ページ数	398	420	text	white	none	  3	1	1										
+																		
+通告一覧	350	445	button	indigo1	none	通告一覧	1	1	110	50		function	transition	Y01AA				
+前画面	460	445	button	indigo1	none	前画面	1	1	110	50		function	transition	Y02AA_2				
+受領	680	445	button	indigo1	none	受　領	1	1	110	50		function	transition	Y01AA				
+																		
+運転士メニュー	10	505	button	indigo1	none	運転士\nメニュー	1	1	90	65		function	transition	D00AA				
+運転情報画面	110	505	button	indigo1	none	運転情報\n画面	1	1	90	65		function	transition	D01AC				
+車掌メニュー	210	505	button	indigo1	none	車掌\nメニュー	1	1	90	65		function	transition	B00AA				
+案内設定	310	505	button	indigo1	none	案内設定	1	1	90	65		function	transition	C01AA				

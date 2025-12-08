@@ -1,0 +1,48 @@
+name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonType	function1	variable1	function2	variable2	function3	variable3
+上下基礎読込	0	0	include	none	none	_TMPA												
+黒背景	0	90	box	none	base1				800	352								
+																		
+画面番号	25	66	text	lightgray	none	C07AA	1	1										
+画面名称	102	66	text	lightgreen	none	案内設定	2	1										
+																		
+枠線	50	100	box	lightgray	none				111	89								
+枠線	160	100	box	lightgray	none				121	23								
+枠線	160	122	box	lightgray	none				121	23								
+枠線	160	144	box	lightgray	none				121	23								
+枠線	160	166	box	lightgray	none				121	23								
+枠線	280	100	box	lightgray	none				443	23								
+枠線	280	122	box	lightgray	none				443	23								
+枠線	280	144	box	lightgray	none				443	23								
+枠線	280	166	box	lightgray	none				443	23								
+																		
+始発・終着駅	52	121	button	indigo1	none	[lh:1]始発・\n終着駅	1	1	105	45		function	transition	C07AB				
+表項目基礎	163	102	text	lightgray	none	[lh:5]路線名\n始発・終着駅\n列車種別\n備考	1	1										
+路線名	285	102	text	white	none	[var:設定運行路線名]	1	1										
+始発・終着駅内容	285	124	text	white	none	[var:設定運行始発]　　→　[var:設定運行終着]	1	1										
+列車種別	285	146	text	white	none	[var:設定運行種別]	1	1										
+備考	285	168	text	white	none	[var:設定運行備考]	1	1										
+																		
+枠線	50	200	box	lightgray	none				111	61								
+枠線	160	200	box	lightgray	none				121	61								
+現在駅	52	208	button	indigo1	none	現在駅	1	1	105	45		function	transition	C07AB				
+現在駅内容	175	220	text	white	none	館　浜　	1	1										
+																		
+設定	670	208	button	indigo1	none	設　定	1	1	105	45		function	transition	C07AB				
+																		
+区切り線	0	265	image	none	none	line_2px												
+																		
+車掌メニュー	10	505	button	indigo1	none	車掌\nメニュー	1	1	90	65		function	transition	C00AA				
+車掌情報画面	110	505	button	indigo1	none	車掌情報\n画面	1	1	90	65		function	transition	C01AA				
+案内設定	210	505	button	indigo1	none	案内設定	1	1	90	65		function	transition	C07AA				
+運転情報画面	310	505	button	indigo1	none	運転情報\n画面	1	1	90	65		function	transition	D01AC				
+																		
+																		
+設定中？			if			設定中フラグ != 'T'												
+設定点滅	0	400	buttonConfig			設定												
+設定パターン番号			variable			[var:パターン番号]												
+設定運行路線名			variable			[var:運行路線名]												
+設定運行始発			variable			[var:運行始発]												
+設定運行終着			variable			[var:運行終着]												
+設定運行種別			variable			[var:運行種別]												
+設定運行備考			variable			[var:運行備考]												
+＿設定中？			end															
