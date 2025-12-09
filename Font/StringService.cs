@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text;
 using TatehamaKTIS.Display;
 
 namespace TatehamaKTIS.Font
@@ -15,6 +16,49 @@ namespace TatehamaKTIS.Font
         {
             this.charService = charService;
             this.displayData = displayData;
+        }
+        public string InterpretString(string str)
+        {
+            StringBuilder result = new StringBuilder();
+            bool scalingActive = false;
+
+            foreach (string token in ParseStringWithControlCharacters(str))
+            {
+                if (token.StartsWith("{sc:") && token.EndsWith("}"))
+                {
+                }
+                else if (token == "{sc}")
+                {
+                }
+                else if (token.StartsWith("{lh:") && token.EndsWith("}"))
+                {
+                }
+                else if (token == "{lh}")
+                {
+                }
+                else if (token.StartsWith("{var:") && token.EndsWith("}"))
+                {
+                    // 変数代入制御文字の処理                
+                    string variableName = token.Substring(5, token.Length - 6);
+                    string variableValue = displayData[variableName]; // displayData から値を取得         
+                    result.Append(variableValue.ToString());
+                }
+                else
+                {
+                    // 通常の文字処理
+                    string[] lines = token.Split(new[] { "\\n" }, StringSplitOptions.None); // "\\n" で分割
+                    for (int i = 0; i < lines.Length; i++)
+                    {
+                        result.Append(lines[i]);
+                        if (i < lines.Length - 1)
+                        {
+                            result.Append(Environment.NewLine); // 改行を追加
+                        }
+                    }
+                }
+            }
+
+            return result.ToString();
         }
 
         public Bitmap GetLCDFontImageByString(string str, int letterSpacing = 1, bool isVertical = false, Color color = default, Color basecolor = default, int scalarX = 1, int scalarY = 1, int lineSpacing = 3)
@@ -43,7 +87,7 @@ namespace TatehamaKTIS.Font
 
             foreach (string token in ParseStringWithControlCharacters(str))
             {
-                if (token.StartsWith("[sc:") && token.EndsWith("]"))
+                if (token.StartsWith("{sc:") && token.EndsWith("}"))
                 {
                     // スケーリング開始制御文字の処理
                     string[] scalars = token.Substring(4, token.Length - 5).Split(',');
@@ -54,14 +98,14 @@ namespace TatehamaKTIS.Font
                         scalingActive = true;
                     }
                 }
-                else if (token == "[sc]")
+                else if (token == "{sc}")
                 {
                     // スケーリング終了制御文字の処理
                     currentScalarX = scalarX;
                     currentScalarY = scalarY;
                     scalingActive = false;
                 }
-                else if (token.StartsWith("[lh:") && token.EndsWith("]"))
+                else if (token.StartsWith("{lh:") && token.EndsWith("}"))
                 {
                     // 行間変更制御文字の処理
                     string lineSpacingValue = token.Substring(4, token.Length - 5);
@@ -70,16 +114,16 @@ namespace TatehamaKTIS.Font
                         currentLineSpacing = newLineSpacing;
                     }
                 }
-                else if (token == "[lh]")
+                else if (token == "{lh}")
                 {
                     // 行間をデフォルト値に戻す
                     currentLineSpacing = lineSpacing;
                 }
-                else if (token.StartsWith("[var:") && token.EndsWith("]"))
+                else if (token.StartsWith("{var:") && token.EndsWith("}"))
                 {
                     // 変数代入制御文字の処理
                     string variableName = token.Substring(5, token.Length - 6);
-                    string variableValue = displayData[variableName]; // DisplayData から値を取得
+                    string variableValue = displayData[variableName]; // displayData から値を取得
                     foreach (char c in variableValue)
                     {
                         Bitmap charBitmap = charService.GetLCDFontImageByChar(c.ToString());
@@ -203,9 +247,9 @@ namespace TatehamaKTIS.Font
 
             for (int i = 0; i < str.Length; i++)
             {
-                if (str[i] == '[')
+                if (str[i] == '{')
                 {
-                    int endIndex = str.IndexOf(']', i);
+                    int endIndex = str.IndexOf('}', i);
                     if (endIndex > i)
                     {
                         if (startIndex < i)

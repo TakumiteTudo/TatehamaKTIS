@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using TatehamaKTIS.Display.Segment;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TatehamaKTIS.Display
 {
@@ -19,27 +20,27 @@ namespace TatehamaKTIS.Display
             this.displayData = displayData;
         }
 
-        public List<DisplaySegmentData> ReadSegmentsFromFile(string filePath)
+        public List<DisplaySegmentData> ReadSegmentsFromFile(string inputFilePath)
         {
             var segments = new List<DisplaySegmentData>();
 
-            if (!File.Exists(filePath))
+            if (!File.Exists(inputFilePath))
             {
-                throw new FileNotFoundException($"指定されたファイルが見つかりません: {filePath}");
+                throw new FileNotFoundException($"指定されたファイルが見つかりません: {inputFilePath}");
             }
 
-            var lines = File.ReadAllLines(filePath);
+            var fileLines = File.ReadAllLines(inputFilePath); // 変数名を変更
 
-            if (lines.Length < 2)
+            if (fileLines.Length < 2)
             {
                 throw new InvalidDataException("ファイルにデータ行が含まれていません。");
             }
 
             var lineStack = new Stack<string>(); // 入れ子の if を処理するためのスタック
 
-            for (int i = 1; i < lines.Length; i++) // ヘッダ行をスキップ
+            for (int i = 1; i < fileLines.Length; i++) // ヘッダ行をスキップ
             {
-                var line = lines[i];
+                var line = fileLines[i];
                 try
                 {
                     var fields = line.Split('\t');
@@ -61,7 +62,7 @@ namespace TatehamaKTIS.Display
                         string targetScreen = fields[6];
                         Debug.WriteLine($"画面遷移: {targetScreen}");
 
-                        string targetFilePath = Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, targetScreen + ".txt");
+                        string targetFilePath = Path.Combine(Path.GetDirectoryName(inputFilePath) ?? string.Empty, targetScreen + ".txt");
                         if (File.Exists(targetFilePath))
                         {
                             // 再帰的に新しい画面を読み込む
@@ -89,9 +90,9 @@ namespace TatehamaKTIS.Display
                         {
                             // 条件が適合しない場合、対応する終了セグメントまでスキップ
                             int skipCount = 1;
-                            while (skipCount > 0 && ++i < lines.Length)
+                            while (skipCount > 0 && ++i < fileLines.Length)
                             {
-                                var skipFields = lines[i].Split('\t');
+                                var skipFields = fileLines[i].Split('\t');
                                 if (skipFields[3] == "if")
                                 {
                                     skipCount++;
@@ -162,13 +163,13 @@ namespace TatehamaKTIS.Display
                         string variableValue = fields[6]; // 変数の値  
                         Debug.WriteLine($"　代入：{variableName} = {variableValue}");
 
-                        // [var:<変数名>] の形式の場合、DisplayData から値を取得
-                        if (variableValue.StartsWith("[var:") && variableValue.EndsWith("]"))
+                        // [var:<変数名>] の形式の場合、displayData から値を取得
+                        if (variableValue.StartsWith("{var:") && variableValue.EndsWith("}"))
                         {
                             string referencedVariable = variableValue.Substring(5, variableValue.Length - 6);
-                            if (displayData.GetAllData().TryGetValue(referencedVariable, out string referencedValue))
+                            if (displayData.GetAllData().TryGetValue(referencedVariable, out object referencedValueObj))
                             {
-                                variableValue = referencedValue; // 参照された変数の値を代入
+                                variableValue = referencedValueObj as string ?? string.Empty; // object を string にキャスト
                             }
                             else
                             {
@@ -176,8 +177,97 @@ namespace TatehamaKTIS.Display
                                 variableValue = string.Empty; // 見つからない場合は空文字列を代入
                             }
                         }
+                        // [datafile:<filepath>] の形式の場合、TSV ファイルを読み込む
+                        else if (variableValue.StartsWith("{datafile:") && variableValue.EndsWith("}"))
+                        {
+                            var data = variableValue.Substring(10, variableValue.Length - 11).Split(","); // 変数名変更
+                            string dataFilePath = data[0];
+                            bool isDataHeader = data.Length >= 2;
+                            int DataHeader = 0;
+                            if (isDataHeader)
+                            {
+                                int.TryParse(data[1], out DataHeader);
+                            }
 
-                        // DisplayData に値を設定
+                            string fullPath = Path.Combine(Path.GetDirectoryName(inputFilePath) ?? string.Empty, dataFilePath);
+
+                            if (!File.Exists(fullPath))
+                            {
+                                Debug.WriteLine($"指定されたデータファイルが見つかりません: {fullPath}");
+                                continue;
+                            }
+
+                            try
+                            {
+                                // TSV ファイルを読み込み、先頭 2 行をスキップ
+                                var dataFileLines = File.ReadAllLines(fullPath).Skip(2).ToArray();
+
+                                // 2 次元配列を作成
+                                var nestedData = new Dictionary<string, object>();
+
+                                for (int rowIndex = 0; rowIndex < dataFileLines.Length; rowIndex++)
+                                {
+                                    var row = dataFileLines[rowIndex].Split('\t');
+
+                                    // 空行をスキップ
+                                    if (row.All(string.IsNullOrWhiteSpace))
+                                    {
+                                        continue;
+                                    }
+
+                                    // キーを生成
+                                    string rowKey;
+                                    if (isDataHeader && DataHeader > 0)
+                                    {
+                                        // 指定された数の先頭列を連結してキーを生成
+                                        rowKey = string.Join("^", row.Take(DataHeader));
+                                    }
+                                    else
+                                    {
+                                        // デフォルトのキー（行インデックス）
+                                        rowKey = rowIndex.ToString();
+                                    }
+
+                                    var rowDict = new Dictionary<string, object>();
+                                    int rowMaxColumnIndex = 0; // 各行の最大データ列インデックス
+
+                                    for (int colIndex = DataHeader; colIndex < row.Length; colIndex++) // DataHeader 列以降を処理
+                                    {
+                                        // 空文字列も保持
+                                        rowDict[(colIndex - DataHeader).ToString()] = row[colIndex];
+
+                                        // 全角スペースを保持するため、Trim を削除
+                                        if (!string.IsNullOrEmpty(row[colIndex]))
+                                        {
+                                            rowMaxColumnIndex = colIndex; // 各行の最大データ列インデックスを更新
+                                        }
+                                    }
+
+                                    // 末尾の空列を削除（各行ごとに処理）
+                                    var keysToRemove = rowDict.Keys
+                                        .Where(key => int.Parse(key) > (rowMaxColumnIndex - DataHeader)) // 各行の最大データ列インデックスを超える列を削除
+                                        .ToList();
+
+                                    foreach (var key in keysToRemove)
+                                    {
+                                        rowDict.Remove(key);
+                                    }
+
+                                    nestedData[rowKey] = rowDict;
+                                }
+
+                                // DisplayData に登録
+                                displayData.RegisterNestedData(variableName, nestedData);
+                                Debug.WriteLine($"データファイルを変数に登録しました: {variableName}");
+                                continue;
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine($"データファイルの読み込み中にエラーが発生しました: {ex.Message}");
+                            }
+                        }
+                        // displayData に値を設定                  
+                        Debug.WriteLine($"　　代入結果: {variableName} = {variableValue}");
                         displayData[variableName] = variableValue;
                         continue;
                     }
@@ -196,7 +286,7 @@ namespace TatehamaKTIS.Display
                     switch (type)
                     {
                         case DisplaySegmentType.include:
-                            string includeFilePath = Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, fields[6] + ".txt");
+                            string includeFilePath = Path.Combine(Path.GetDirectoryName(inputFilePath) ?? string.Empty, fields[6] + ".txt");
                             if (File.Exists(includeFilePath))
                             {
                                 var includedSegments = ReadSegmentsFromFile(includeFilePath);
@@ -300,7 +390,7 @@ namespace TatehamaKTIS.Display
                         sb.Clear();
                     }
                 }
-                else if ("()=!><&|".Contains(c))
+                else if ("()=!><&|+*-/".Contains(c))
                 {
                     if (sb.Length > 0)
                     {
@@ -351,7 +441,8 @@ namespace TatehamaKTIS.Display
                 { "||", 1 },
                 { "&&", 2 },
                 { "==", 3 }, { "!=", 3 }, { ">", 3 }, { "<", 3 }, { ">=", 3 }, { "<=", 3 },
-                { "!(" , 4 }, // "!(" の優先順位を高く設定
+                { "+", 4 }, { "-", 4 }, { "*", 5 }, { "/", 5 },
+                { "!(" , 0 }, // "!(" の優先順位を高く設定
                 { "(", 0 }, { ")", 0 }
             };
 
@@ -424,6 +515,17 @@ namespace TatehamaKTIS.Display
                             var operand = stack.Pop();
                             stack.Push(!Convert.ToBoolean(operand));
                         }
+                        else if ("+-*/".Contains(token))
+                        {
+                            if (stack.Count < 2)
+                            {
+                                throw new InvalidOperationException($"算術演算中にスタックが不足しました。トークン: {token}");
+                            }
+
+                            var right = stack.Pop();
+                            var left = stack.Pop();
+                            stack.Push(EvaluateArithmetic(left, right, token));
+                        }
                         else
                         {
                             if (stack.Count < 2)
@@ -457,17 +559,66 @@ namespace TatehamaKTIS.Display
             // シングルクォートで囲まれている場合は固定文字列として扱う
             if (operand.StartsWith("'") && operand.EndsWith("'"))
             {
-                return operand.Substring(1, operand.Length - 2); // クォートを除去
+                return ParseDynamicValue(operand.Substring(1, operand.Length - 2)); // クォートを除去
             }
 
-            // 変数の場合は DisplayData から取得
+            // 配列アクセス記法（例: 案内始発[設定運行路線名].Count）を処理
+            if (operand.Contains("[") && operand.Contains("]"))
+            {
+                var baseKey = operand.Substring(0, operand.IndexOf("["));
+                var indexKey = operand.Substring(operand.IndexOf("[") + 1, operand.IndexOf("]") - operand.IndexOf("[") - 1);
+
+                // indexKey がシングルクォートで囲まれていない場合、変数として解釈
+                if (!indexKey.StartsWith("'") || !indexKey.EndsWith("'"))
+                {
+                    var indexKeys = indexKey.Split("^");
+                    if (indexKeys.Length >= 1)
+                    {
+                        var keys = new List<string>();
+                        foreach (var key in indexKeys)
+                        {
+                            if (displayData.GetAllData().TryGetValue(key, out var keyValue))
+                            {
+                                keys.Add(keyValue as string ?? string.Empty);
+                            }
+                        }
+                        indexKey = string.Join("^", keys);
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"指定されたインデックス変数が見つかりません: {indexKey}");
+                        return 0; // 見つからない場合は 0 を返す
+                    }
+                }
+                else
+                {
+                    // シングルクォートを除去
+                    indexKey = indexKey.Substring(1, indexKey.Length - 2);
+                }
+                Debug.WriteLine($"　　　　キー名変換：{indexKey}");
+
+                if (operand.EndsWith(".Count"))
+                {
+                    if (displayData.GetAllData().TryGetValue(baseKey, out var baseValue) && baseValue is Dictionary<string, object> nestedDict)
+                    {
+                        if (nestedDict.TryGetValue(indexKey, out var targetValue) && targetValue is Dictionary<string, object> targetDict)
+                        {
+                            return targetDict.Count; // 要素数を返す
+                        }
+                    }
+                    Debug.WriteLine($"指定された辞書が見つかりません: {operand}");
+                    return 0; // 見つからない場合は 0 を返す
+                }
+            }
+
+            // 変数の場合は displayData から取得
             if (displayData.GetAllData().TryGetValue(operand, out var value))
             {
                 Debug.WriteLine($"　　　オペランド取得: {operand} = {value}");
-                return ParseDynamicValue(value);
+                return ParseDynamicValue((string)value);
             }
 
-            Debug.WriteLine($"オペランドが見つかりません: {operand}. DisplayData に存在しない可能性があります。");
+            Debug.WriteLine($"オペランドが見つかりません: {operand}. displayData に存在しない可能性があります。");
             return null; // 存在しない場合は null を返す
         }
 
@@ -540,6 +691,13 @@ namespace TatehamaKTIS.Display
                 }
             }
 
+            // 型が不正に変換されていないかチェック
+            if (left is bool || right is bool)
+            {
+                throw new InvalidOperationException($"オペランドの型が不正です: 左辺 = {left}, 右辺 = {right}");
+            }
+
+            // 演算子の処理
             switch (op)
             {
                 case "==": return Equals(left, right);
@@ -550,14 +708,31 @@ namespace TatehamaKTIS.Display
                 case "<=": return Convert.ToDouble(left) <= Convert.ToDouble(right);
                 case "&&": return Convert.ToBoolean(left) && Convert.ToBoolean(right);
                 case "||": return Convert.ToBoolean(left) || Convert.ToBoolean(right);
+
                 default: throw new InvalidOperationException($"不明な演算子: {op}");
             }
+        }
+        private object EvaluateArithmetic(object left, object right, string op)
+        {
+            // 左辺と右辺を数値に変換
+            double leftValue = Convert.ToDouble(left);
+            double rightValue = Convert.ToDouble(right);
+
+            // 算術演算を実行
+            return op switch
+            {
+                "+" => leftValue + rightValue,
+                "-" => leftValue - rightValue,
+                "*" => leftValue * rightValue,
+                "/" => rightValue == 0 ? throw new DivideByZeroException("ゼロ除算が発生しました。") : leftValue / rightValue,
+                _ => throw new InvalidOperationException($"不明な算術演算子: {op}")
+            };
         }
 
         private bool IsOperand(string token)
         {
             // オペランド（変数名またはリテラル値）かどうかを判定
-            return !new[] { "||", "&&", "==", "!=", ">", "<", ">=", "<=", "!(", "(", ")" }.Contains(token);
+            return !new[] { "||", "&&", "==", "!=", ">", "<", ">=", "<=", "!(", "(", ")", "+", "-", "*", "/" }.Contains(token);
         }
 
         public void LoadColorConfigFromDictionary(Dictionary<string, string> colorConfig)

@@ -15,7 +15,7 @@ namespace TatehamaKTIS.Display
         internal List<DisplaySegmentData> displaySegmentDatas { get; set; }
         private Dictionary<string, ButtonConfig> buttonConfigs = new Dictionary<string, ButtonConfig>();
         CharService charService;
-        StringService stringService;
+        internal StringService stringService;
 
         // 前回の描画結果を保持するフィールド
         private Bitmap? previousImage;
@@ -36,8 +36,9 @@ namespace TatehamaKTIS.Display
 
         internal Bitmap BuildDisplayImage()
         {
-            previousDisplaySegmentDatas = displaySegmentDatas.Select(segment => segment.DeepCopy()).ToList(); // DeepCopy を使用
-            return getDisplayImage(displaySegmentDatas);
+            previousDisplaySegmentDatas = displaySegmentDatas.Select(segment => segment.DeepCopy()).ToList(); // DeepCopy を使用                 
+            previousImage = getDisplayImage(displaySegmentDatas);
+            return previousImage;
         }
 
         internal Bitmap BuildDisplayImageDiff()
@@ -93,7 +94,7 @@ namespace TatehamaKTIS.Display
             {
                 g.Clear(Color.Transparent); // 背景を透明に設定
 
-                foreach (var segment in displaySegmentDatas)
+                foreach (var segment in segmentDatas)
                 {
                     try
                     {
@@ -126,9 +127,6 @@ namespace TatehamaKTIS.Display
                     }
                 }
             }
-            // 前回の画像を更新
-            previousImage = (Bitmap)canvas.Clone();
-
             return canvas;
         }
 
@@ -164,7 +162,7 @@ namespace TatehamaKTIS.Display
                 segment1.y != segment2.y ||
                 segment1.color != segment2.color ||
                 segment1.baseColor != segment2.baseColor ||
-                segment1.isVisible != segment2.isVisible)
+                !segment1.isVisible)
             {
                 return false;
             }
@@ -262,6 +260,16 @@ namespace TatehamaKTIS.Display
 
         private void DrawButtonSegment(Graphics g, ButtonSegment buttonSegment)
         {
+            if (buttonSegment.Text == "")
+            {
+                buttonSegment.isVisible = false;
+            }
+
+            if (!buttonSegment.isVisible)
+            {
+                return;
+            }
+
             // ボタン画像のファイル名を取得
             bool isNowLighting = GetButtonisNowLighting(buttonSegment);
             string buttonImagePath = GetButtonImageFileName(buttonSegment, isNowLighting);
@@ -283,10 +291,68 @@ namespace TatehamaKTIS.Display
             int cornerWidth = config.CornerX;
             int cornerHeight = config.CornerY;
 
+            // ボタン内部に描画される画像またはテキストのサイズを計算
+            int contentWidth = 0;
+            int contentHeight = 0;
+            Bitmap contentImage = new Bitmap(1, 1);
+
+            string content = buttonSegment.Text;
+            if (content.StartsWith("{image:") && content.EndsWith("}"))
+            {
+                // 画像を描画するパターン
+                string imageName = content.Substring(7, content.Length - 8); // "[image:<ファイル名>]" からファイル名を抽出
+                string imagePath = Path.Combine("Image", "Button", "Image", imageName + ".png");
+
+                if (File.Exists(imagePath))
+                {
+                    using (contentImage = new Bitmap(imagePath))
+                    {
+                        contentWidth = contentImage.Width;
+                        contentHeight = contentImage.Height;
+                    }
+                }
+            }
+            else
+            {
+                // テキストを描画するパターン
+                contentImage = stringService.GetLCDFontImageByString(
+                    content,
+                    letterSpacing: 1,
+                    isVertical: false,
+                    color: buttonSegment.isChecked
+                        ? (isNowLighting ? config.TextCTL : config.TextCT)
+                        : (isNowLighting ? config.TextCFL : config.TextCF),
+                    basecolor: Color.Transparent,
+                    scalarX: buttonSegment.scalarX,
+                    scalarY: buttonSegment.scalarY,
+                    lineSpacing: 3
+                );
+
+                contentWidth = contentImage.Width;
+                contentHeight = contentImage.Height;
+            }
+
+            // ボタン内部の画像サイズが (1, 1) 以下の場合、描画をスキップ
+            if (contentWidth <= 1 || contentHeight <= 1)
+            {
+                // ボタンが描画対象外の場合、リストから削除   
+                buttonSegment.isVisible = false;
+                return;
+            }
+
             using (Bitmap buttonImage = new Bitmap(buttonImagePath))
             {
-                // 透明色を設定
-                buttonImage.MakeTransparent(Color.FromArgb(unchecked((int)0xFFFF00FF)));
+                // 0xFFFF00FF を buttonSegment.baseColor に置き換える
+                for (int x = 0; x < buttonImage.Width; x++)
+                {
+                    for (int y = 0; y < buttonImage.Height; y++)
+                    {
+                        if (buttonImage.GetPixel(x, y).ToArgb() == unchecked((int)0xFFFF00FF))
+                        {
+                            buttonImage.SetPixel(x, y, buttonSegment.baseColor);
+                        }
+                    }
+                }
 
                 // 描画用のボタン画像を作成
                 using (Bitmap scaledButton = new Bitmap(buttonWidth, buttonHeight))
@@ -294,7 +360,7 @@ namespace TatehamaKTIS.Display
                 {
                     sg.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor; // アンチエイリアスを無効化
                     sg.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half; // ピクセルのオフセットを調整
-                    // 四隅を描画（原寸のまま）
+                                                                                        // 四隅を描画（原寸のまま）
                     sg.DrawImage(buttonImage, new Rectangle(0, 0, cornerWidth, cornerHeight), new Rectangle(0, 0, cornerWidth, cornerHeight), GraphicsUnit.Pixel); // 左上
                     sg.DrawImage(buttonImage, new Rectangle(buttonWidth - cornerWidth, 0, cornerWidth, cornerHeight), new Rectangle(buttonImage.Width - cornerWidth, 0, cornerWidth, cornerHeight), GraphicsUnit.Pixel); // 右上
                     sg.DrawImage(buttonImage, new Rectangle(0, buttonHeight - cornerHeight, cornerWidth, cornerHeight), new Rectangle(0, buttonImage.Height - cornerHeight, cornerWidth, cornerHeight), GraphicsUnit.Pixel); // 左下
@@ -315,51 +381,22 @@ namespace TatehamaKTIS.Display
             }
 
             // テキストまたは画像を描画
-            string content = buttonSegment.Text;
-
-            if (content.StartsWith("[image:") && content.EndsWith("]"))
+            if (content.StartsWith("{image:") && content.EndsWith("}"))
             {
-                // 画像を描画するパターン
-                string imageName = content.Substring(7, content.Length - 8); // "[image:<ファイル名>]" からファイル名を抽出
-                string imagePath = Path.Combine("Image", "Button", "Image", imageName + ".png");
-
-                if (File.Exists(imagePath))
+                using (contentImage)
                 {
-                    using (Bitmap contentImage = new Bitmap(imagePath))
-                    {
-                        // 透明色を設定
-                        contentImage.MakeTransparent(Color.FromArgb(unchecked((int)0xFFFF00FF)));
-                        // 画像をボタン中央に配置
-                        int imageX = buttonSegment.x + (buttonWidth - contentImage.Width) / 2;
-                        int imageY = buttonSegment.y + (buttonHeight - contentImage.Height) / 2;
-                        g.DrawImage(contentImage, imageX, imageY);
-                    }
-                }
-                else
-                {
-                    Debug.WriteLine($"指定された画像ファイルが見つかりません: {imagePath}");
+                    contentImage.MakeTransparent(Color.FromArgb(unchecked((int)0xFFFF00FF)));
+                    int imageX = buttonSegment.x + (buttonWidth - contentImage.Width) / 2;
+                    int imageY = buttonSegment.y + (buttonHeight - contentImage.Height) / 2;
+                    g.DrawImage(contentImage, imageX, imageY);
                 }
             }
             else
             {
-                // テキストを描画するパターン
-                Bitmap textImage = stringService.GetLCDFontImageByString(
-                    content,
-                    letterSpacing: 1,
-                    isVertical: false,
-                    color: buttonSegment.isChecked
-                        ? (isNowLighting ? config.TextCTL : config.TextCT)
-                        : (isNowLighting ? config.TextCFL : config.TextCF),
-                    basecolor: Color.Transparent,
-                    scalarX: buttonSegment.scalarX,
-                    scalarY: buttonSegment.scalarY,
-                    lineSpacing: 3
-                );
 
-                // テキストをボタン中央に配置
-                int textX = buttonSegment.x + (buttonWidth - textImage.Width) / 2;
-                int textY = buttonSegment.y + (buttonHeight - textImage.Height) / 2 - 1;
-                g.DrawImage(textImage, textX, textY);
+                int textX = buttonSegment.x + (buttonWidth - contentImage.Width) / 2;
+                int textY = buttonSegment.y + (buttonHeight - contentImage.Height) / 2 - 1;
+                g.DrawImage(contentImage, textX, textY);
             }
         }
 

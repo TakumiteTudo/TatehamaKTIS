@@ -14,7 +14,7 @@ namespace TatehamaKTIS.Display
 {
     internal class DisplayManager
     {
-        DisplayData DisplayData;
+        DisplayData displayData;
         string displayType;
         Dictionary<string, Dictionary<string, string>> displayConfig;
         DisplayBuilder displayBuilder;
@@ -39,9 +39,9 @@ namespace TatehamaKTIS.Display
 
         internal async Task SetDisplayType(string type)
         {
-            DisplayData = new DisplayData();
-            displayBuilder = new DisplayBuilder(DisplayData);
-            segmentReader = new SegmentReader(DisplayData);
+            displayData = new DisplayData();
+            displayBuilder = new DisplayBuilder(displayData);
+            segmentReader = new SegmentReader(displayData);
             displayType = type;
             displayConfig = ParseConfig();
             ConfigureSegmentReaderColors(); // 色設定を行う          
@@ -152,7 +152,7 @@ namespace TatehamaKTIS.Display
 
             Debug.WriteLine($"タッチ：{x}, {y}");
             var button = DetectButtonTouch(x, y);
-            if (button != null)
+            if (button != null && button.isVisible)
             {
                 Debug.WriteLine($"ボタン押：{button.name}");
                 if (button.buttonType != ButtonType.checkbox)
@@ -173,50 +173,67 @@ namespace TatehamaKTIS.Display
                 await Task.Delay(waitTime);
             }
             lastTouchTime = DateTime.Now; // 最後のタッチ時刻を更新
+            var doDisplayUpdate = false;
 
             var button = DetectButtonTouch(x, y);
-            if (button != null)
+            if (button != null && button.isVisible)
             {
-                foreach (var func in button.functionList)
+                if (button.buttonType == ButtonType.checkbox)
                 {
-                    Debug.WriteLine($"関数実行: {func.Item1} パラメータ: {func.Item2}");
-                    switch (func.Item1)
-                    {
-                        case "assignment":
-                            HandleAssignment(func.Item2);
-                            break;
-
-                        case "exclusive":
-                            HandleExclusive(button.groupname, button);
-                            break;
-
-                        case "buttonConfig":
-                            HandleButtonConfig(func.Item2);
-                            break;
-
-                        case "transition":
-                            var newDisplayName = func.Item2;
-                            Debug.WriteLine($"画面遷移: {newDisplayName}");
-                            try
-                            {
-                                var newSegments = segmentReader.ReadSegmentsFromFile($"Data/Tatehama/{newDisplayName}.txt");
-                                if (newSegments != null && newSegments.Count > 0)
-                                {
-                                    displayBuilder.displaySegmentDatas = newSegments;
-                                }
-                            }
-                            catch (FileNotFoundException ex)
-                            {
-                                Debug.WriteLine($"画面未定義：{newDisplayName}");
-                            }
-                            break;
-                    }
+                    button.isChecked = !button.isChecked;
                 }
-                if (button.buttonType != ButtonType.checkbox)
+                else
                 {
                     button.isChecked = false;
                 }
-                DisplayUpdateDiff([button]);
+                foreach (var func in button.functionList)
+                {
+                    Debug.WriteLine($"関数実行: {func.Item1} パラメータ: {func.Item2}");
+                    try
+                    {
+                        switch (func.Item1)
+                        {
+                            case "assignment":
+                                HandleAssignment(func.Item2);
+                                break;
+
+                            case "exclusive":
+                                HandleExclusive(button.groupname, button);
+                                break;
+
+                            case "buttonConfig":
+                                HandleButtonConfig(func.Item2);
+                                break;
+
+                            case "transition":
+                                var newDisplayName = func.Item2;
+                                Debug.WriteLine($"画面遷移: {newDisplayName}");
+                                try
+                                {
+                                    var newSegments = segmentReader.ReadSegmentsFromFile($"Data/Tatehama/{newDisplayName}.txt");
+                                    if (newSegments != null && newSegments.Count > 0)
+                                    {
+                                        displayBuilder.displaySegmentDatas = newSegments;
+                                    }
+                                    doDisplayUpdate = true;
+                                    DisplayUpdate();
+                                }
+                                catch (FileNotFoundException ex)
+                                {
+                                    Debug.WriteLine($"画面未定義：{newDisplayName}");
+                                }
+                                break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"関数実行エラー：{ex.Message}\n{ex.StackTrace}");
+                    }
+                }
+                if (!doDisplayUpdate)
+                {
+                    DisplayUpdateDiff([button]);
+                }
             }
         }
 
@@ -226,6 +243,12 @@ namespace TatehamaKTIS.Display
             {
                 if (segment is ButtonSegment button)
                 {
+                    // ボタンが非表示の場合はスキップ
+                    if (!button.isVisible)
+                    {
+                        continue;
+                    }
+
                     if (touchX >= button.x && touchX <= button.x + button.sizeX &&
                         touchY >= button.y && touchY <= button.y + button.sizeY)
                     {
@@ -284,45 +307,108 @@ namespace TatehamaKTIS.Display
         }
         private void HandleAssignment(string parameter)
         {
-            // '=' を中心に分割し、前後の空白を削除
-            var parts = parameter.Split(new[] { '=' }, 2, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length != 2)
+            // '+=' または '-=' を含むか確認
+            if (parameter.Contains("+=") || parameter.Contains("-="))
             {
-                Debug.WriteLine($"無効な assignment パラメータ: {parameter}");
-                return;
-            }
-
-            string left = parts[0].Trim(); // 左辺の変数名
-            string right = parts[1].Trim(); // 右辺の値または変数名
-
-            if (right.StartsWith("'") && right.EndsWith("'"))
-            {
-                // <変数> = '<値>'
-                string value = right.Trim('\'');
-                DisplayData[left] = value;
-            }
-            else if (right.StartsWith("group."))
-            {
-                // <変数> = group.<ボタングループ名>
-                string groupName = right.Substring(6);
-                var checkedButtons = displayBuilder.displaySegmentDatas
-                    .OfType<ButtonSegment>()
-                    .Where(b => b.groupname == groupName && b.isChecked)
-                    .Select(b => b.name);
-
-                DisplayData[left] = string.Join(",", checkedButtons);
-            }
-            else
-            {
-                // <変数> = <変数>
-                if (DisplayData.GetAllData().TryGetValue(right, out var value))
+                // '+=' または '-=' を中心に分割
+                var parts = parameter.Split(new[] { "+=", "-=" }, 2, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length != 2)
                 {
-                    DisplayData[left] = value;
+                    Debug.WriteLine($"無効な assignment パラメータ: {parameter}");
+                    return;
+                }
+
+                string left = parts[0].Trim(); // 左辺の変数名
+                string right = parts[1].Trim(); // 右辺の値または変数名
+
+                // 現在の値を取得（存在しない場合は 0 をデフォルト値とする）
+                if (!displayData.GetAllData().TryGetValue(left, out var currentValueStr) || !int.TryParse((string)currentValueStr, out int currentValue))
+                {
+                    currentValue = 0;
+                }
+
+                // 右辺の値を取得
+                int rightValue;
+                if (right.StartsWith("'") && right.EndsWith("'"))
+                {
+                    // リテラル値の場合
+                    rightValue = int.Parse(right.Trim('\''));
+                }
+                else if (displayData.GetAllData().TryGetValue(right, out var rightValueStr) && int.TryParse((string)rightValueStr, out int parsedRightValue))
+                {
+                    // 変数の場合
+                    rightValue = parsedRightValue;
                 }
                 else
                 {
-                    Debug.WriteLine($"変数が見つかりません: {right}");
+                    Debug.WriteLine($"無効な右辺値: {right}");
+                    return;
                 }
+
+                // 加算または減算を実行
+                int result = parameter.Contains("+=") ? currentValue + rightValue : currentValue - rightValue;
+
+                // 結果を保存
+                displayData[left] = result.ToString();
+                Debug.WriteLine($"　　代入結果: {left} = {result}");
+            }
+            else
+            {
+                // '=' を中心に分割し、前後の空白を削除
+                var parts = parameter.Split(new[] { '=' }, 2, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length != 2)
+                {
+                    Debug.WriteLine($"無効な assignment パラメータ: {parameter}");
+                    return;
+                }
+
+                string left = parts[0].Trim(); // 左辺の変数名
+                string right = parts[1].Trim(); // 右辺の値または変数名
+                string data;
+
+                if (right.StartsWith("'") && right.EndsWith("'"))
+                {
+                    // <変数> = '<値>'
+                    string value = right.Trim('\'');
+                    data = value;
+                }
+                else if (right.StartsWith("group."))
+                {
+                    // <変数> = group.<ボタングループ名>
+                    string groupName = right.Substring(6);
+                    var checkedButtons = displayBuilder.displaySegmentDatas
+                        .OfType<ButtonSegment>()
+                        .Where(b => b.groupname == groupName && b.isChecked)
+                        .Select(b => b.name);
+
+                    data = string.Join(",", checkedButtons);
+                }
+                else if (right.StartsWith("grouptext."))
+                {
+                    // <変数> = grouptext.<ボタングループ名>
+                    string groupName = right.Substring(10);
+                    var checkedButtons = displayBuilder.displaySegmentDatas
+                        .OfType<ButtonSegment>()
+                        .Where(b => b.groupname == groupName && b.isChecked)
+                        .Select(b => displayBuilder.stringService.InterpretString(b.Text));
+
+                    data = string.Join(",", checkedButtons);
+                }
+                else
+                {
+                    // <変数> = <変数>
+                    if (displayData.GetAllData().TryGetValue(right, out object referencedValueObj))
+                    {
+                        data = referencedValueObj as string ?? string.Empty; // object を string にキャスト
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"指定された変数が見つかりません: {right}");
+                        data = string.Empty; // 見つからない場合は空文字列を代入
+                    }
+                }
+                displayData[left] = data;
+                Debug.WriteLine($"　　代入結果: {left} = {data}");
             }
         }
 
@@ -336,13 +422,16 @@ namespace TatehamaKTIS.Display
             {
                 if (button == currentButton)
                 {
-                    // 自分自身のボタンは isChecked を true に設定
                     button.isChecked = true;
                 }
                 else
                 {
-                    // 他のボタンは isChecked を false に設定
-                    button.isChecked = false;
+                    if (button.isChecked == true)
+                    {
+                        // 他のボタンは isChecked を false に設定
+                        button.isChecked = false;
+                        DisplayUpdateDiff([button]);
+                    }
                 }
             }
         }
