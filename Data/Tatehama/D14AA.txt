@@ -8,7 +8,7 @@ name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonT
 バージョン情報枠	20	348	box	lightgray	none				185	23								
 バージョン情報	50	351	text	white	none	バージョン情報	1	1										
 バージョン内容枠	20	370	box	lightgray	none				185	65								
-バージョン内容	23	373	text	white	none	１．０．\n２０２５１２０４．１\nＰｒｏｄ　 ｽﾀﾝﾄﾞｱﾛｰﾝ	1	1										
+バージョン内容	23	373	text	white	none	１．０．\n２０２５１２０４．１\nＰｒｏｄ　 ﾊﾝﾄﾞﾋﾞﾙﾄﾞ	1	1										
 																		
 Br動作原因枠	235	115	box	lightgray	none				545	23								
 Br動作原因	436	118	text	white	none	ブレーキ動作要因	1	1										
@@ -20,6 +20,6 @@ Br動作原因内容	238	140	text	white	none	６８５：伝送部初期化失�
 参考情報内容枠	235	307	box	lightgray	none				545	128								
 参考情報内容	238	310	text	white	none	＜７８６＞運転禁止。司令経由で信号通信部に連絡。\n＜３９６＞ＡＴＳ開放にて走行。\n＜３９７＞ＡＴＳ開放にて走行。\n＜６８５＞ＡＴＳ表示器異常がなければ運転支障なし。	1	1										
 																		
-運転士メニュー	10	505	button	indigo1	none	運転士\nメニュー	1	1	90	65		function	transition	D00AA				
-運転情報画面	110	505	button	indigo1	none	運転情報\n画面	1	1	90	65		function	transition	D01AC				
-応急マニュアル	210	505	button	indigo1	none	応急マニ\nュアル	1	1	90	65		function	transition	B00AA				
+運転士メニュー	10	505	button	indigo1	base1	運転士\nメニュー	1	1	90	65		function	transition	D00AA				
+運転情報画面	110	505	button	indigo1	base1	運転情報\n画面	1	1	90	65		function	transition	D01AC				
+応急マニュアル	210	505	button	indigo1	base1	応急マニ\nュアル	1	1	90	65		function	transition	B00AA				

@@ -4,20 +4,20 @@ name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonT
 画面番号	25	66	text	lightgray	none	D00AA	1	1										
 画面名称	102	66	text	lightgreen	none	運転士メニュー	2	1										
 																		
-運転情報	40	130	button	indigo1	none	運転情報	2	2	220	75		function	transition	D01AC				
-応急マニュアル	40	220	button	indigo1	none	応急[sc:1,2]マニュアル	2	2	220	75		function	transition	B00AA				
-案内設定	40	310	button	indigo1	none	案内設定	2	2	220	75		function	transition	C07AA				
-運転通告	40	400	button	indigo1	none	運転通告	2	2	220	75		function	transition	Y01AA				
+運転情報	40	130	button	indigo1	base2	運転情報	2	2	220	75		function	transition	D01AC				
+応急マニュアル	40	220	button	indigo1	base2	応急{sc:1,2}マニュアル	2	2	220	75		function	transition	B00AA				
+案内設定	40	310	button	indigo1	base2	案内設定	2	2	220	75		function	transition	C07AA				
+運転通告	40	400	button	indigo1	base2	運転通告	2	2	220	75		function	transition	Y01AA				
 																		
-車両情報	280	130	button	indigo1	none	車両情報	1	1	150	50		function	transition	D02AA				
-ブレーキ確認情報	280	220	button	indigo1	none	ブレーキ\n確認情報	1	1	150	50		function	transition	D05AA				
-ＳＩＶ動作	280	310	button	indigo1	none	ＳＩＶ動作	1	1	150	50		function	transition	D08AA				
-TIMS伝送情報	280	400	button	indigo1	none	KTIS伝送情報	1	1	150	50		function	transition	D11AA				
-出区情報	445	130	button	indigo1	none	出庫情報	1	1	150	50		function	transition	D03AA				
-起動確認情報	445	220	button	indigo1	none	起動確認情報	1	1	150	50		function	transition	D06AA				
-積算距離・電力	445	310	button	indigo1	none	積算距離・電力	1	1	150	50		function	transition	D09AA				
-機器解放	445	400	button	indigo1	none	機器解放	1	1	150	50		function	transition	D12AA				
-ＡＴＳ情報	610	130	button	indigo1	none	館浜ＡＴＳ情報	1	1	150	50		function	transition	D14AA				
-時計設定	610	220	button	indigo1	none	時計設定	1	1	150	50		function	transition	D07AA				
-試運転	610	310	button	indigo1	none	試運転	1	1	150	50		function	transition	R00AA				
-ＴＡＳＣ情報	610	400	button	indigo1	none	ＴＡＳＣ情報	1	1	150	50		function	transition	D16AA				
+車両情報	280	130	button	indigo1	base2	車両情報	1	1	150	50		function	transition	D02AA				
+ブレーキ確認情報	280	220	button	indigo1	base2	ブレーキ\n確認情報	1	1	150	50		function	transition	D05AA				
+ＳＩＶ動作	280	310	button	indigo1	base2	ＳＩＶ動作	1	1	150	50		function	transition	D08AA				
+TIMS伝送情報	280	400	button	indigo1	base2	KTIS伝送情報	1	1	150	50		function	transition	D11AA				
+出区情報	445	130	button	indigo1	base2	出庫情報	1	1	150	50		function	transition	D03AA				
+起動確認情報	445	220	button	indigo1	base2	起動確認情報	1	1	150	50		function	transition	D06AA				
+積算距離・電力	445	310	button	indigo1	base2	積算距離・電力	1	1	150	50		function	transition	D09AA				
+機器解放	445	400	button	indigo1	base2	機器解放	1	1	150	50		function	transition	D12AA				
+ＡＴＳ情報	610	130	button	indigo1	base2	館浜ＡＴＳ情報	1	1	150	50		function	transition	D14AA				
+時計設定	610	220	button	indigo1	base2	時計設定	1	1	150	50		function	transition	D07AA				
+試運転	610	310	button	indigo1	base2	試運転	1	1	150	50		function	transition	R00AA				
+ＴＡＳＣ情報	610	400	button	indigo1	base2	ＴＡＳＣ情報	1	1	150	50		function	transition	D16AA				

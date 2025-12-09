@@ -1,0 +1,10 @@
+name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonType	function1	variable1	function2	variable2	function3	variable3
+上下基礎読込	0	0	include	none	none	_TMPA												
+																		
+画面番号	25	66	text	lightgray	none	C07AB	1	1										
+画面名称	102	66	text	lightgreen	none	路線選択	2	1										
+																		
+設定中フラグ			variable			T												
+始発駅選択遷移			transition			C07AC												
+																		
+共通キー読込	0	0	include	none	none	_TMPC												

@@ -1,0 +1,5 @@
+name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonType	function1	variable1	function2	variable2	function3	variable3
+車掌メニュー	10	505	button	indigo1	base1	車掌\nメニュー	1	1	90	65		function	assignment	画面数 = '-1'	assignment	設定中フラグ = 'F'	transition	C00AA
+車掌情報画面	110	505	button	indigo1	base1	車掌情報\n画面	1	1	90	65		function	assignment	画面数 = '-1'	assignment	設定中フラグ = 'F'	transition	C01AA
+案内設定	210	505	button	indigo1	base1	案内設定	1	1	90	65		function	assignment	画面数 = '-1'	assignment	設定中フラグ = 'F'	transition	C07AA
+運転情報画面	310	505	button	indigo1	base1	運転情報\n画面	1	1	90	65		function	assignment	画面数 = '-1'	assignment	設定中フラグ = 'F'	transition	D01AC

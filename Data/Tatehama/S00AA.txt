@@ -16,3 +16,7 @@ _距離全角			variable			１２３５６．０
 運行終着			variable			大　路　												
 運行種別			variable			準急３												
 運行備考			variable			～浜園：準急、浜園～：普通												
+																		
+案内路線			variable			{datafile:案内\1_路線.txt}												
+案内始発			variable			{datafile:案内\2_路線→始発.txt,1}												
+案内終着			variable			{datafile:案内\3_始発→終着.txt,2}												

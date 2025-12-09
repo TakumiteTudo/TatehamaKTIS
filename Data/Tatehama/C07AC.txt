@@ -1,0 +1,47 @@
+name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonType	function1	variable1	function2	variable2	function3	variable3
+上下基礎読込	0	0	include	none	none	_TMPA												
+																		
+画面番号	25	66	text	lightgray	none	C07AC	1	1										
+画面名称	102	66	text	lightgreen	none	始発駅選択	2	1										
+																		
+１，１	124	120	button	indigo1	base2	{var:案内始発[設定運行路線名]['0' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+１，２	124	180	button	indigo1	base2	{var:案内始発[設定運行路線名]['1' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+１，３	124	240	button	indigo1	base2	{var:案内始発[設定運行路線名]['2' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+１，４	124	300	button	indigo1	base2	{var:案内始発[設定運行路線名]['3' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+１，５	124	360	button	indigo1	base2	{var:案内始発[設定運行路線名]['4' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+２，１	237	120	button	indigo1	base2	{var:案内始発[設定運行路線名]['5' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+２，２	237	180	button	indigo1	base2	{var:案内始発[設定運行路線名]['6' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+２，３	237	240	button	indigo1	base2	{var:案内始発[設定運行路線名]['7' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+２，４	237	300	button	indigo1	base2	{var:案内始発[設定運行路線名]['8' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+２，５	237	360	button	indigo1	base2	{var:案内始発[設定運行路線名]['9' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+３，１	350	120	button	indigo1	base2	{var:案内始発[設定運行路線名]['10' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+３，２	350	180	button	indigo1	base2	{var:案内始発[設定運行路線名]['11' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+３，３	350	240	button	indigo1	base2	{var:案内始発[設定運行路線名]['12' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+３，４	350	300	button	indigo1	base2	{var:案内始発[設定運行路線名]['13' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+３，５	350	360	button	indigo1	base2	{var:案内始発[設定運行路線名]['14' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+４，１	463	120	button	indigo1	base2	{var:案内始発[設定運行路線名]['15' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+４，２	463	180	button	indigo1	base2	{var:案内始発[設定運行路線名]['16' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+４，３	463	240	button	indigo1	base2	{var:案内始発[設定運行路線名]['17' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+４，４	463	300	button	indigo1	base2	{var:案内始発[設定運行路線名]['18' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+４，５	463	360	button	indigo1	base2	{var:案内始発[設定運行路線名]['19' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+５，１	576	120	button	indigo1	base2	{var:案内始発[設定運行路線名]['20' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+５，２	576	180	button	indigo1	base2	{var:案内始発[設定運行路線名]['21' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+５，３	576	240	button	indigo1	base2	{var:案内始発[設定運行路線名]['22' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+５，４	576	300	button	indigo1	base2	{var:案内始発[設定運行路線名]['23' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+５，５	576	360	button	indigo1	base2	{var:案内始発[設定運行路線名]['24' + 画面数 * '25']}	1	1	100	45	駅ボタン	checkbox	exclusive	駅ボタン	buttonConfig	設定:0,400		
+																		
+画面数設定済？			if			!(画面数 >= '0')												
+画面数			variable			0												
+_画面数設定済？			end															
+																		
+戻る	100	445	button	indigo1	base2	戻　る	1	1	110	50		function	assignment	設定運行始発 = ''	assignment	画面数 = '-1'	transition	C07AA
+前画面ある？			if			画面数 != '0'												
+前画面	460	445	button	indigo1	base2	前画面	1	1	110	50		function	assignment	画面数 -= '1'	transition	C07AC		
+_前画面ある？			end															
+次画面ある？			if			案内始発[設定運行路線名].Count > (画面数 + '1') * '25'												
+次画面	570	445	button	indigo1	base2	次画面	1	1	110	50		function	assignment	画面数 += '1'	transition	C07AC		
+_次画面ある？			end															
+設定	680	445	button	indigo1	base2	設　定	1	1	110	50		function	assignment	設定運行始発 = grouptext.駅ボタン	assignment	画面数 = '-1'	transition	C07AD
+																		
+																		
+共通キー読込	0	0	include	none	none	_TMPC												

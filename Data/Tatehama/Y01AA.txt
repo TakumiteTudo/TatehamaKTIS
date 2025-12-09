@@ -2,12 +2,10 @@ name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonT
 上下基礎読込	0	0	include	none	none	_TMPA												
 																		
 画面番号	25	66	text	lightgray	none	Y01AA	1	1										
-画面名称	102	66	text	lightgreen	none	司令通告一覧	2	1										
-																		
-１	150	150	button	indigo1	none	１	2	2	50	50		function	transition	Y02AA															
+画面名称	102	66	text	lightgreen	none	運転通告一覧	2	1										
 																		
 																		
-																		
+１	150	150	button	indigo1	base2	１	2	2	50	50		function	transition	Y02AA				
 																		
 																		
 																		
@@ -38,7 +36,9 @@ name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonT
 																		
 																		
 																		
-運転士メニュー	10	505	button	indigo1	none	運転士\nメニュー	1	1	90	65		function	transition	D00AA				
-運転情報画面	110	505	button	indigo1	none	運転情報\n画面	1	1	90	65		function	transition	D01AC				
-車掌メニュー	210	505	button	indigo1	none	車掌\nメニュー	1	1	90	65		function	transition	B00AA				
-案内設定	310	505	button	indigo1	none	案内設定	1	1	90	65		function	transition	C07AA				
+																		
+																		
+運転士メニュー	10	505	button	indigo1	base1	運転士\nメニュー	1	1	90	65		function	transition	D00AA				
+運転情報画面	110	505	button	indigo1	base1	運転情報\n画面	1	1	90	65		function	transition	D01AC				
+車掌メニュー	210	505	button	indigo1	base1	車掌\nメニュー	1	1	90	65		function	transition	B00AA				
+案内設定	310	505	button	indigo1	base1	案内設定	1	1	90	65		function	transition	C01AA				
