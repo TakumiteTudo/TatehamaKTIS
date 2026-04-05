@@ -88,8 +88,10 @@ namespace TatehamaKTIS.Display
             }
             else
             {
-                var displayImage = displayBuilder.BuildDisplayImage();
-                displayAction?.Invoke(displayImage);
+                var fallback = new Rendering.BitmapDisplayRenderer(displayBuilder);
+                var request = new Rendering.DisplayRenderRequest { Segments = displayBuilder.displaySegmentDatas, ScreenSize = new System.Drawing.Size(800, 600) };
+                var img = fallback.RenderFull(request);
+                displayAction?.Invoke(img);
             }
         }
 
@@ -109,8 +111,10 @@ namespace TatehamaKTIS.Display
             }
             else
             {
-                var displayImage = displayBuilder.BuildDisplayImageDiff();
-                displayAction?.Invoke(displayImage);
+                var fallback = new Rendering.BitmapDisplayRenderer(displayBuilder);
+                var request = new Rendering.DisplayRenderRequest { Segments = displayBuilder.displaySegmentDatas, ScreenSize = new System.Drawing.Size(800, 600) };
+                var img = fallback.RenderDelta(request, null);
+                displayAction?.Invoke(img);
             }
         }
 
@@ -129,8 +133,10 @@ namespace TatehamaKTIS.Display
             }
             else
             {
-                var displayImage = displayBuilder.BuildDisplayImageDiff(displaySegmentData);
-                displayAction?.Invoke(displayImage);
+                var fallback = new Rendering.BitmapDisplayRenderer(displayBuilder);
+                var request = new Rendering.DisplayRenderRequest { Segments = displayBuilder.displaySegmentDatas, ChangedSegments = displaySegmentData, ScreenSize = new System.Drawing.Size(800, 600) };
+                var img = fallback.RenderDelta(request, displaySegmentData);
+                displayAction?.Invoke(img);
             }
         }
 
