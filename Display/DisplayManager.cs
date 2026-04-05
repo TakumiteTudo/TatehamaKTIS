@@ -19,7 +19,7 @@ namespace TatehamaKTIS.Display
         Dictionary<string, Dictionary<string, string>> displayConfig;
         DisplayBuilder displayBuilder;
         SegmentReader segmentReader;
-        internal Action<Bitmap> displayAction;
+        internal Action<object> displayAction;
 
         private DateTime lastTouchTime = DateTime.MinValue; // 最後のタッチ時刻
         private TimeSpan minTouchInterval; // 最少間隔
