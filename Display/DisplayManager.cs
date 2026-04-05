@@ -20,6 +20,7 @@ namespace TatehamaKTIS.Display
         DisplayBuilder displayBuilder;
         SegmentReader segmentReader;
         internal Action<object> displayAction;
+        private Rendering.IDisplayRenderer? renderer;
 
         private DateTime lastTouchTime = DateTime.MinValue; // 最後のタッチ時刻
         private TimeSpan minTouchInterval; // 最少間隔
@@ -41,6 +42,8 @@ namespace TatehamaKTIS.Display
         {
             displayData = new DisplayData();
             displayBuilder = new DisplayBuilder(displayData);
+            // レンダラをDisplayBuilderベースの既存実装で初期化
+            renderer = new Rendering.BitmapDisplayRenderer(displayBuilder);
             segmentReader = new SegmentReader(displayData);
             displayType = type;
             displayConfig = ParseConfig();
@@ -73,20 +76,62 @@ namespace TatehamaKTIS.Display
 
         internal void DisplayUpdate()
         {
-            var displayImage = displayBuilder.BuildDisplayImage();
-            displayAction?.Invoke(displayImage);
+            if (renderer != null)
+            {
+                var request = new Rendering.DisplayRenderRequest
+                {
+                    Segments = displayBuilder.displaySegmentDatas,
+                    ScreenSize = new System.Drawing.Size(800, 600)
+                };
+                var img = renderer.RenderFull(request);
+                displayAction?.Invoke(img);
+            }
+            else
+            {
+                var displayImage = displayBuilder.BuildDisplayImage();
+                displayAction?.Invoke(displayImage);
+            }
         }
 
         internal void DisplayUpdateDiff()
         {
-            var displayImage = displayBuilder.BuildDisplayImageDiff();
-            displayAction?.Invoke(displayImage);
+            if (renderer != null)
+            {
+                var changed = displayBuilder.FilterChangedSegments();
+                var request = new Rendering.DisplayRenderRequest
+                {
+                    Segments = displayBuilder.displaySegmentDatas,
+                    ChangedSegments = changed,
+                    ScreenSize = new System.Drawing.Size(800, 600)
+                };
+                var img = renderer.RenderDelta(request, changed);
+                displayAction?.Invoke(img);
+            }
+            else
+            {
+                var displayImage = displayBuilder.BuildDisplayImageDiff();
+                displayAction?.Invoke(displayImage);
+            }
         }
 
         internal void DisplayUpdateDiff(List<DisplaySegmentData> displaySegmentData)
         {
-            var displayImage = displayBuilder.BuildDisplayImageDiff(displaySegmentData);
-            displayAction?.Invoke(displayImage);
+            if (renderer != null)
+            {
+                var request = new Rendering.DisplayRenderRequest
+                {
+                    Segments = displayBuilder.displaySegmentDatas,
+                    ChangedSegments = displaySegmentData,
+                    ScreenSize = new System.Drawing.Size(800, 600)
+                };
+                var img = renderer.RenderDelta(request, displaySegmentData);
+                displayAction?.Invoke(img);
+            }
+            else
+            {
+                var displayImage = displayBuilder.BuildDisplayImageDiff(displaySegmentData);
+                displayAction?.Invoke(displayImage);
+            }
         }
 
         // タッチダウンイベントを操作履歴に追加
