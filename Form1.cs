@@ -11,9 +11,7 @@ namespace TatehamaKTIS
         public Form1()
         {
             InitializeComponent();
-            displayManager = new DisplayManager();
-            // ’“ü‰Â”\‚ÈƒŒƒ“ƒ_ƒ‰‚ð“o˜^
-            displayManager.RegisterRenderer(new Display.Rendering.BitmapDisplayRenderer());
+            displayManager = new DisplayManager(new Display.Rendering.BitmapDisplayRenderer());
 
             displayManager.displayAction = (img) =>
             {

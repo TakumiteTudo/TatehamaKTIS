@@ -29,8 +29,11 @@ namespace TatehamaKTIS.Display
         private readonly ConcurrentQueue<(string ActionType, int X, int Y)> operationQueue = new();
         private readonly SemaphoreSlim operationSemaphore = new(1, 1); // 同時実行を防ぐためのセマフォ
 
-        internal DisplayManager()
+        internal DisplayManager(Rendering.IDisplayRenderer renderer)
         {
+            // renderer を必須化
+            this.renderer = renderer ?? throw new ArgumentNullException(nameof(renderer));
+
             SetDisplayType("Tatehama");
             minTouchInterval = TimeSpan.FromMilliseconds(100);
 
@@ -138,11 +141,7 @@ namespace TatehamaKTIS.Display
             displayAction?.Invoke(img);
         }
 
-        // 外部からレンダラを注入する
-        internal void RegisterRenderer(Rendering.IDisplayRenderer render)
-        {
-            renderer = render;
-        }
+        // NOTE: レンダラはコンストラクタで必須注入されるため、RegisterRenderer は廃止しました。
 
         // タッチダウンイベントを操作履歴に追加
         internal void DisplayTotchDown(int x, int y)
