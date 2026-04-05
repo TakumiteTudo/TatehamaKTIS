@@ -7,13 +7,13 @@ namespace TatehamaKTIS.Display.Rendering
     internal interface IDisplayRenderer
     {
         /// <summary>
-        /// 全体再描画を行う。戻り値は実装に依存する（具体的なイメージ型を公開しないため object を使用）。
+        /// 全体再描画を行う。戻り値は System.Drawing.Image を返す。
         /// </summary>
-        object RenderFull(DisplayRenderRequest request);
+        System.Drawing.Image RenderFull(DisplayRenderRequest request);
 
         /// <summary>
-        /// 差分描画を行う。changedSegments は変更のあったセグメント一覧。
+        /// 差分描画を行う。
         /// </summary>
-        object RenderDelta(DisplayRenderRequest request, IReadOnlyList<DisplaySegmentData> changedSegments);
+        System.Drawing.Image RenderDelta(DisplayRenderRequest request);
     }
 }

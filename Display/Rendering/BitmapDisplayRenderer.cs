@@ -16,20 +16,24 @@ namespace TatehamaKTIS.Display.Rendering
     /// </summary>
     internal class BitmapDisplayRenderer : IDisplayRenderer
     {
-        private readonly DisplayBuilder builder;
         private Bitmap? previousImage;
+        private Font.IStringService? currentStringService;
+        private IReadOnlyDictionary<string, ButtonConfig>? currentButtonConfigs;
 
-        internal BitmapDisplayRenderer(DisplayBuilder builder)
+        internal BitmapDisplayRenderer()
         {
-            this.builder = builder;
         }
 
-        public object RenderFull(DisplayRenderRequest request)
+        public System.Drawing.Image RenderFull(DisplayRenderRequest request)
         {
-            var segments = request.Segments ?? builder.displaySegmentDatas;
-            int width = request.ScreenSize.Width;
-            int height = request.ScreenSize.Height;
-            Bitmap canvas = new Bitmap(width, height);
+            var segments = request.Segments ?? new List<DisplaySegmentData>();
+            // setup services from request
+            currentStringService = request.StringService;
+            currentButtonConfigs = request.ButtonConfigs;
+
+            int w = request.Width;
+            int h = request.Height;
+            Bitmap canvas = new Bitmap(w, h);
             using (Graphics g = Graphics.FromImage(canvas))
             {
                 g.Clear(Color.Transparent);
@@ -61,34 +65,25 @@ namespace TatehamaKTIS.Display.Rendering
                     }
                 }
             }
-            // 保持
             previousImage = (Bitmap)canvas.Clone();
-            // Update builder diff state by calling filter (will update previousDisplaySegmentDatas)
-            try { builder.FilterChangedSegments(); } catch { }
-            return (Bitmap)canvas.Clone();
+            return (System.Drawing.Image)canvas.Clone();
         }
 
-        public object RenderDelta(DisplayRenderRequest request, IReadOnlyList<DisplaySegmentData> changedSegments)
+        public System.Drawing.Image RenderDelta(DisplayRenderRequest request)
         {
-            List<DisplaySegmentData> changed = null;
-            if (changedSegments == null || changedSegments.Count == 0)
+            // setup services from request
+            currentStringService = request.StringService;
+            currentButtonConfigs = request.ButtonConfigs;
+
+            var changed = request.ChangedSegments ?? new List<DisplaySegmentData>();
+            if (changed.Count == 0)
             {
-                changed = builder.FilterChangedSegments();
-            }
-            else
-            {
-                changed = new List<DisplaySegmentData>(changedSegments);
+                return (System.Drawing.Image)(previousImage ?? new Bitmap(request.Width, request.Height));
             }
 
-            if (changed == null || changed.Count == 0)
-            {
-                return previousImage as object ?? new Bitmap(request.ScreenSize.Width, request.ScreenSize.Height);
-            }
-
-            // 描画対象となる差分を描画
-            int width = request.ScreenSize.Width;
-            int height = request.ScreenSize.Height;
-            Bitmap canvas = new Bitmap(width, height);
+            int w2 = request.Width;
+            int h2 = request.Height;
+            Bitmap canvas = new Bitmap(w2, h2);
             using (Graphics g = Graphics.FromImage(canvas))
             {
                 g.Clear(Color.Transparent);
@@ -131,13 +126,13 @@ namespace TatehamaKTIS.Display.Rendering
                 previousImage = (Bitmap)canvas.Clone();
             }
 
-            return (Bitmap)previousImage.Clone();
+            return (System.Drawing.Image)previousImage.Clone();
         }
 
         private void DrawTextSegment(Graphics g, TextSegment textSegment)
         {
             if (textSegment == null) return;
-            Bitmap textImage = builder.stringService.GetLCDFontImageByString(
+            Bitmap textImage = (currentStringService ?? throw new InvalidOperationException("StringService not provided in request")).GetLCDFontImageByString(
                 textSegment.Text,
                 letterSpacing: 1,
                 isVertical: false,
@@ -198,7 +193,7 @@ namespace TatehamaKTIS.Display.Rendering
             string buttonImagePath = GetButtonImageFileName(buttonSegment, isNowLighting);
             if (!File.Exists(buttonImagePath)) throw new FileNotFoundException($"ボタン画像が見つかりません: {buttonImagePath}");
 
-            if (!builder.buttonConfigs.TryGetValue(buttonSegment.buttonColor, out ButtonConfig config))
+            if (currentButtonConfigs == null || !currentButtonConfigs.TryGetValue(buttonSegment.buttonColor, out ButtonConfig config))
             {
                 throw new KeyNotFoundException($"ボタン設定が見つかりません: {buttonSegment.buttonColor}");
             }
@@ -228,7 +223,7 @@ namespace TatehamaKTIS.Display.Rendering
             }
             else
             {
-                contentImage = builder.stringService.GetLCDFontImageByString(
+                contentImage = (currentStringService ?? throw new InvalidOperationException("StringService not provided in request")).GetLCDFontImageByString(
                     content,
                     letterSpacing: 1,
                     isVertical: false,

@@ -7,7 +7,7 @@ using TatehamaKTIS.Display;
 
 namespace TatehamaKTIS.Font
 {
-    internal class StringService
+    internal class StringService : IStringService
     {
         private readonly CharService charService;
         private readonly DisplayData displayData;

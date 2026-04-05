@@ -12,18 +12,21 @@ namespace TatehamaKTIS
         {
             InitializeComponent();
             displayManager = new DisplayManager();
-            displayManager.displayAction = (bmp) =>
+            // ’“ü‰Â”\‚ÈƒŒƒ“ƒ_ƒ‰‚ð“o˜^
+            displayManager.RegisterRenderer(new Display.Rendering.BitmapDisplayRenderer());
+
+            displayManager.displayAction = (img) =>
             {
                 if (InvokeRequired)
                 {
                     Invoke(new Action(() =>
                     {
-                        pictureBox1.Image = bmp as System.Drawing.Image;
+                        pictureBox1.Image = img;
                     }));
                 }
                 else
                 {
-                    pictureBox1.Image = bmp as System.Drawing.Image;
+                    pictureBox1.Image = img;
                 }
             };
             displayManager.DisplayUpdate();

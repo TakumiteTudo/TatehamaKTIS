@@ -19,7 +19,7 @@ namespace TatehamaKTIS.Display
         Dictionary<string, Dictionary<string, string>> displayConfig;
         DisplayBuilder displayBuilder;
         SegmentReader segmentReader;
-        internal Action<object> displayAction;
+        internal Action<System.Drawing.Image> displayAction;
         private Rendering.IDisplayRenderer? renderer;
 
         private DateTime lastTouchTime = DateTime.MinValue; // 最後のタッチ時刻
@@ -42,8 +42,6 @@ namespace TatehamaKTIS.Display
         {
             displayData = new DisplayData();
             displayBuilder = new DisplayBuilder(displayData);
-            // レンダラをDisplayBuilderベースの既存実装で初期化
-            renderer = new Rendering.BitmapDisplayRenderer(displayBuilder);
             segmentReader = new SegmentReader(displayData);
             displayType = type;
             displayConfig = ParseConfig();
@@ -76,68 +74,74 @@ namespace TatehamaKTIS.Display
 
         internal void DisplayUpdate()
         {
-            if (renderer != null)
+            if (renderer == null)
             {
-                var request = new Rendering.DisplayRenderRequest
-                {
-                    Segments = displayBuilder.displaySegmentDatas,
-                    ScreenSize = new System.Drawing.Size(800, 600)
-                };
-                var img = renderer.RenderFull(request);
-                displayAction?.Invoke(img);
+                Debug.WriteLine("レンダラが登録されていません。DisplayUpdate をスキップします。");
+                return;
             }
-            else
+
+            var request = new Rendering.DisplayRenderRequest
             {
-                var fallback = new Rendering.BitmapDisplayRenderer(displayBuilder);
-                var request = new Rendering.DisplayRenderRequest { Segments = displayBuilder.displaySegmentDatas, ScreenSize = new System.Drawing.Size(800, 600) };
-                var img = fallback.RenderFull(request);
-                displayAction?.Invoke(img);
-            }
+                Segments = displayBuilder.displaySegmentDatas,
+                Width = 800,
+                Height = 600,
+                StringService = displayBuilder.stringService,
+                ButtonConfigs = displayBuilder.buttonConfigs
+            };
+
+            var img = renderer.RenderFull(request);
+            displayAction?.Invoke(img);
         }
 
         internal void DisplayUpdateDiff()
         {
-            if (renderer != null)
+            if (renderer == null)
             {
-                var changed = displayBuilder.FilterChangedSegments();
-                var request = new Rendering.DisplayRenderRequest
-                {
-                    Segments = displayBuilder.displaySegmentDatas,
-                    ChangedSegments = changed,
-                    ScreenSize = new System.Drawing.Size(800, 600)
-                };
-                var img = renderer.RenderDelta(request, changed);
-                displayAction?.Invoke(img);
+                Debug.WriteLine("レンダラが登録されていません。DisplayUpdateDiff をスキップします。");
+                return;
             }
-            else
+
+            var changed = displayBuilder.FilterChangedSegments();
+            var request = new Rendering.DisplayRenderRequest
             {
-                var fallback = new Rendering.BitmapDisplayRenderer(displayBuilder);
-                var request = new Rendering.DisplayRenderRequest { Segments = displayBuilder.displaySegmentDatas, ScreenSize = new System.Drawing.Size(800, 600) };
-                var img = fallback.RenderDelta(request, null);
-                displayAction?.Invoke(img);
-            }
+                Segments = displayBuilder.displaySegmentDatas,
+                ChangedSegments = changed,
+                Width = 800,
+                Height = 600,
+                StringService = displayBuilder.stringService,
+                ButtonConfigs = displayBuilder.buttonConfigs
+            };
+
+            var img = renderer.RenderDelta(request);
+            displayAction?.Invoke(img);
         }
 
         internal void DisplayUpdateDiff(List<DisplaySegmentData> displaySegmentData)
         {
-            if (renderer != null)
+            if (renderer == null)
             {
-                var request = new Rendering.DisplayRenderRequest
-                {
-                    Segments = displayBuilder.displaySegmentDatas,
-                    ChangedSegments = displaySegmentData,
-                    ScreenSize = new System.Drawing.Size(800, 600)
-                };
-                var img = renderer.RenderDelta(request, displaySegmentData);
-                displayAction?.Invoke(img);
+                Debug.WriteLine("レンダラが登録されていません。DisplayUpdateDiff をスキップします。");
+                return;
             }
-            else
+
+            var request = new Rendering.DisplayRenderRequest
             {
-                var fallback = new Rendering.BitmapDisplayRenderer(displayBuilder);
-                var request = new Rendering.DisplayRenderRequest { Segments = displayBuilder.displaySegmentDatas, ChangedSegments = displaySegmentData, ScreenSize = new System.Drawing.Size(800, 600) };
-                var img = fallback.RenderDelta(request, displaySegmentData);
-                displayAction?.Invoke(img);
-            }
+                Segments = displayBuilder.displaySegmentDatas,
+                ChangedSegments = displaySegmentData,
+                Width = 800,
+                Height = 600,
+                StringService = displayBuilder.stringService,
+                ButtonConfigs = displayBuilder.buttonConfigs
+            };
+
+            var img = renderer.RenderDelta(request);
+            displayAction?.Invoke(img);
+        }
+
+        // 外部からレンダラを注入する
+        internal void RegisterRenderer(Rendering.IDisplayRenderer render)
+        {
+            renderer = render;
         }
 
         // タッチダウンイベントを操作履歴に追加
