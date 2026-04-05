@@ -116,5 +116,10 @@ namespace TatehamaKTIS
                 Clipboard.SetImage(pictureBox1.Image);
             }
         }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

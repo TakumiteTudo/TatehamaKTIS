@@ -31,11 +31,11 @@
             components = new System.ComponentModel.Container();
             pictureBox1 = new PictureBox();
             contextMenuStrip1 = new ContextMenuStrip(components);
+            現在画像をToolStripMenuItem = new ToolStripMenuItem();
             強制初期選択ToolStripMenuItem = new ToolStripMenuItem();
             強制再起動ToolStripMenuItem = new ToolStripMenuItem();
             モード切替SWToolStripMenuItem = new ToolStripMenuItem();
             timer1 = new System.Windows.Forms.Timer(components);
-            現在画像をToolStripMenuItem = new ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             contextMenuStrip1.SuspendLayout();
             SuspendLayout();
@@ -49,6 +49,7 @@
             pictureBox1.Size = new Size(800, 600);
             pictureBox1.TabIndex = 0;
             pictureBox1.TabStop = false;
+            pictureBox1.Click += pictureBox1_Click;
             pictureBox1.MouseDown += pictureBox1_MouseDown;
             pictureBox1.MouseUp += pictureBox1_MouseUp;
             // 
@@ -56,41 +57,40 @@
             // 
             contextMenuStrip1.Items.AddRange(new ToolStripItem[] { 現在画像をToolStripMenuItem, 強制初期選択ToolStripMenuItem, 強制再起動ToolStripMenuItem, モード切替SWToolStripMenuItem });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new Size(181, 114);
+            contextMenuStrip1.Size = new Size(148, 92);
+            // 
+            // 現在画像をToolStripMenuItem
+            // 
+            現在画像をToolStripMenuItem.Name = "現在画像をToolStripMenuItem";
+            現在画像をToolStripMenuItem.Size = new Size(147, 22);
+            現在画像をToolStripMenuItem.Text = "現在画像コピー";
+            現在画像をToolStripMenuItem.Click += 現在画像コピーToolStripMenuItem_Click;
             // 
             // 強制初期選択ToolStripMenuItem
             // 
             強制初期選択ToolStripMenuItem.Name = "強制初期選択ToolStripMenuItem";
-            強制初期選択ToolStripMenuItem.Size = new Size(180, 22);
+            強制初期選択ToolStripMenuItem.Size = new Size(147, 22);
             強制初期選択ToolStripMenuItem.Text = "強制初期選択";
             強制初期選択ToolStripMenuItem.Click += 強制初期選択ToolStripMenuItem_Click;
             // 
             // 強制再起動ToolStripMenuItem
             // 
             強制再起動ToolStripMenuItem.Name = "強制再起動ToolStripMenuItem";
-            強制再起動ToolStripMenuItem.Size = new Size(180, 22);
+            強制再起動ToolStripMenuItem.Size = new Size(147, 22);
             強制再起動ToolStripMenuItem.Text = "強制再起動";
             強制再起動ToolStripMenuItem.Click += 強制再起動ToolStripMenuItem_Click;
             // 
             // モード切替SWToolStripMenuItem
             // 
             モード切替SWToolStripMenuItem.Name = "モード切替SWToolStripMenuItem";
-            モード切替SWToolStripMenuItem.Size = new Size(180, 22);
+            モード切替SWToolStripMenuItem.Size = new Size(147, 22);
             モード切替SWToolStripMenuItem.Text = "モード切替SW";
             モード切替SWToolStripMenuItem.Click += モード切替SWToolStripMenuItem_Click;
             // 
             // timer1
             // 
             timer1.Enabled = true;
-            timer1.Interval = 100;
             timer1.Tick += timer1_Tick;
-            // 
-            // 現在画像をToolStripMenuItem
-            // 
-            現在画像をToolStripMenuItem.Name = "現在画像をToolStripMenuItem";
-            現在画像をToolStripMenuItem.Size = new Size(180, 22);
-            現在画像をToolStripMenuItem.Text = "現在画像コピー";
-            現在画像をToolStripMenuItem.Click += 現在画像コピーToolStripMenuItem_Click;
             // 
             // Form1
             // 

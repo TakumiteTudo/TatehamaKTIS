@@ -1,0 +1,59 @@
+name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonType	function1	variable1	function2	variable2	function3	variable3
+上下基礎読込	0	0	include	none	none	_TMPA												
+黒背景	0	87	box	none	base1				800	349								
+																		
+画面番号	25	66	text	lightgray	none	C07AF	1	1										
+画面名称	102	66	text	lightgreen	none	運用パターン選択	2	1										
+																		
+枠線	48	90	box	lightgray	none				125	46								
+枠線	172	90	box	lightgray	none				422	46								
+表項目基礎	57	94	text	lightgray	none	始発・終着駅	1	1										
+表項目基礎	73	114	text	lightgray	none	(路線名)	1	1										
+始発・終着駅内容	177	94	text	white	none	{var:設定運行始発}　　→　{var:設定運行終着}	1	1										
+路線名	177	114	text	white	none	（{var:設定運行路線名}）	1	1										
+																		
+枠線	48	140	box	lightgray	none				353	26								
+枠線	100	140	box	lightgray	none				99	182								
+枠線	48	165	box	lightgray	none				353	209								
+枠線	48	217	box	lightgray	none				353	209								
+枠線	48	269	box	lightgray	none				353	53								
+枠線	100	269	box	lightgray	none				99	157								
+表項目基礎	62	144	text	lightgray	none	No.	1	1										
+表項目基礎	113	144	text	lightgray	none	列車種別	1	1										
+表項目基礎	266	144	text	lightgray	none	備　　考	1	1										
+																		
+枠線	405	140	box	lightgray	none				353	26								
+枠線	457	140	box	lightgray	none				99	182								
+枠線	405	165	box	lightgray	none				353	209								
+枠線	405	217	box	lightgray	none				353	209								
+枠線	405	269	box	lightgray	none				353	53								
+枠線	457	269	box	lightgray	none				99	157								
+表項目基礎	419	144	text	lightgray	none	No.	1	1										
+表項目基礎	471	144	text	lightgray	none	列車種別	1	1										
+表項目基礎	623	144	text	lightgray	none	備　　考	1	1										
+																		
+①	51	169	button	indigo1	base1	1	1	1	47	45	パターン	checkbox						
+①種別	106	183	text	white	none	未設定	1	1										
+①備考	204	172	text	white	none	未設定 　　　　\n	1	1										
+																		
+																		
+																		
+																		
+画面数設定済？			if			!(画面数 >= '0')												
+画面数			variable			0												
+_画面数設定済？			end															
+																		
+戻る	100	453	button	indigo1	base2	戻　る	1	1	103	45		function	assignment	画面数 = '-1'	transition	C07AD		
+案内設定	205	453	button	indigo1	base2	案内設定	1	1	103	45		function	assignment	画面数 = '-1'	assignment	設定中フラグ = 'F'	transition	C07AA
+前画面ある？			if			画面数 != '0'												
+前画面	460	453	button	indigo1	base2	前画面	1	1	103	45		function	assignment	画面数 -= '1'	transition	C07AF		
+_前画面ある？			end															
+次画面ある？			if			画面数 != '3'												
+次画面	565	453	button	indigo1	base2	次画面	1	1	103	45		function	assignment	画面数 += '1'	transition	C07AF		
+_次画面ある？			end															
+設定	670	453	button	indigo1	base2	設　定	1	1	103	45		function	assignment	設定運行終着 = grouptext.駅ボタン	assignment	画面数 = '-1'		C07AA
+																		
+																		
+																		
+																		
+共通キー読込	0	0	include	none	none	_TMPC												

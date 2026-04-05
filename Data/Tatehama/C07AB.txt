@@ -3,8 +3,13 @@ name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonT
 																		
 画面番号	25	66	text	lightgray	none	C07AB	1	1										
 画面名称	102	66	text	lightgreen	none	路線選択	2	1										
-																		
+始発設定空？			if			設定運行始発 != ''												
 設定中フラグ			variable			T												
 始発駅選択遷移			transition			C07AC												
+_始発設定空？			end															
+始発設定空？			if			設定運行始発 == ''												
+設定中フラグ			variable			F												
+始発駅選択遷移			transition			C07AA												
+_始発設定空？			end															
 																		
 共通キー読込	0	0	include	none	none	_TMPC												

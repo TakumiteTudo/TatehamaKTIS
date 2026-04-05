@@ -8,7 +8,7 @@ name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonT
 																		
 _時刻全角			variable			１２　３４　５６												
 _速度全角			variable			　　０												
-_距離全角			variable			１２３５６．０												
+_距離全角			variable			３．０												
 																		
 パターン番号			variable															
 運行路線名			variable			館浜本線												

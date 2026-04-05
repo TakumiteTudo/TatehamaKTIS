@@ -20,3 +20,7 @@ name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonT
 共通メッセージ下1枠	414	505	box	none	darkgray				284	20								
 共通メッセージ下2枠	414	530	box	none	darkgray				284	20								
 共通メッセージ下3枠	414	555	box	none	darkgray				284	20								
+																		
+_時刻全角			variable			２５　５４　３６												
+_速度全角			variable			　　０												
+_距離全角			variable			　　　　３．０												

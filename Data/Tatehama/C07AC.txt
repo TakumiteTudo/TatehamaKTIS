@@ -34,14 +34,14 @@ name	x	y	type	color	basecolor	text	scalarX	scalarY	sizeX	sizeY	groupname	buttonT
 画面数			variable			0												
 _画面数設定済？			end															
 																		
-戻る	100	445	button	indigo1	base2	戻　る	1	1	110	50		function	assignment	設定運行始発 = ''	assignment	画面数 = '-1'	transition	C07AA
+戻る	100	453	button	indigo1	base2	戻　る	1	1	103	45		function	assignment	設定運行始発 = ''	assignment	画面数 = '-1'	transition	C07AB
 前画面ある？			if			画面数 != '0'												
-前画面	460	445	button	indigo1	base2	前画面	1	1	110	50		function	assignment	画面数 -= '1'	transition	C07AC		
+前画面	460	453	button	indigo1	base2	前画面	1	1	103	45		function	assignment	画面数 -= '1'	transition	C07AC		
 _前画面ある？			end															
 次画面ある？			if			案内始発[設定運行路線名].Count > (画面数 + '1') * '25'												
-次画面	570	445	button	indigo1	base2	次画面	1	1	110	50		function	assignment	画面数 += '1'	transition	C07AC		
+次画面	565	453	button	indigo1	base2	次画面	1	1	103	45		function	assignment	画面数 += '1'	transition	C07AC		
 _次画面ある？			end															
-設定	680	445	button	indigo1	base2	設　定	1	1	110	50		function	assignment	設定運行始発 = grouptext.駅ボタン	assignment	画面数 = '-1'	transition	C07AD
+設定	670	453	button	indigo1	base2	設　定	1	1	103	45		function	assignment	設定運行始発 = grouptext.駅ボタン	assignment	画面数 = '-1'	transition	C07AD
 																		
 																		
 共通キー読込	0	0	include	none	none	_TMPC												
