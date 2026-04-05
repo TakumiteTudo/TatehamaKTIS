@@ -8,7 +8,7 @@ using TatehamaKTIS.Display;
 
 class Program
 {
-    static int Main()
+    public static int RunTests()
     {
         try
         {
