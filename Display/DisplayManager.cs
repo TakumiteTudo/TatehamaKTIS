@@ -19,7 +19,6 @@ namespace TatehamaKTIS.Display
         Dictionary<string, Dictionary<string, string>> displayConfig;
         DisplayBuilder displayBuilder;
         SegmentReader segmentReader;
-        internal Action<System.Drawing.Image> displayAction;
         private Rendering.IDisplayRenderer? renderer;
 
         private DateTime lastTouchTime = DateTime.MinValue; // 最後のタッチ時刻
@@ -92,8 +91,7 @@ namespace TatehamaKTIS.Display
                 ButtonConfigs = displayBuilder.buttonConfigs
             };
 
-            var img = renderer.RenderFull(request);
-            displayAction?.Invoke(img);
+            renderer.RenderFull(request);
         }
 
         internal void DisplayUpdateDiff()
@@ -115,8 +113,7 @@ namespace TatehamaKTIS.Display
                 ButtonConfigs = displayBuilder.buttonConfigs
             };
 
-            var img = renderer.RenderDelta(request);
-            displayAction?.Invoke(img);
+            renderer.RenderDelta(request);
         }
 
         internal void DisplayUpdateDiff(List<DisplaySegmentData> displaySegmentData)
@@ -137,8 +134,7 @@ namespace TatehamaKTIS.Display
                 ButtonConfigs = displayBuilder.buttonConfigs
             };
 
-            var img = renderer.RenderDelta(request);
-            displayAction?.Invoke(img);
+            renderer.RenderDelta(request);
         }
 
         // NOTE: レンダラはコンストラクタで必須注入されるため、RegisterRenderer は廃止しました。

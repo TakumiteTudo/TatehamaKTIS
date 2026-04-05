@@ -19,12 +19,14 @@ namespace TatehamaKTIS.Display.Rendering
         private Bitmap? previousImage;
         private Font.IStringService? currentStringService;
         private IReadOnlyDictionary<string, ButtonConfig>? currentButtonConfigs;
+        private readonly System.Action<System.Drawing.Image>? presentAction;
 
-        internal BitmapDisplayRenderer()
+        internal BitmapDisplayRenderer(System.Action<System.Drawing.Image>? presentAction = null)
         {
+            this.presentAction = presentAction;
         }
 
-        public System.Drawing.Image RenderFull(DisplayRenderRequest request)
+        public void RenderFull(DisplayRenderRequest request)
         {
             var segments = request.Segments ?? new List<DisplaySegmentData>();
             // setup services from request
@@ -66,10 +68,19 @@ namespace TatehamaKTIS.Display.Rendering
                 }
             }
             previousImage = (Bitmap)canvas.Clone();
-            return (System.Drawing.Image)canvas.Clone();
+            var toPresent = (System.Drawing.Image)canvas.Clone();
+            if (presentAction != null)
+            {
+                presentAction(toPresent);
+            }
+            else
+            {
+                // no-op: renderer produced image but no present action provided
+                toPresent.Dispose();
+            }
         }
 
-        public System.Drawing.Image RenderDelta(DisplayRenderRequest request)
+        public void RenderDelta(DisplayRenderRequest request)
         {
             // setup services from request
             currentStringService = request.StringService;
@@ -78,7 +89,12 @@ namespace TatehamaKTIS.Display.Rendering
             var changed = request.ChangedSegments ?? new List<DisplaySegmentData>();
             if (changed.Count == 0)
             {
-                return (System.Drawing.Image)(previousImage ?? new Bitmap(request.Width, request.Height));
+                if (previousImage != null)
+                {
+                    var clone = (System.Drawing.Image)previousImage.Clone();
+                    if (presentAction != null) presentAction(clone); else clone.Dispose();
+                }
+                return;
             }
 
             int w2 = request.Width;
@@ -125,8 +141,15 @@ namespace TatehamaKTIS.Display.Rendering
             {
                 previousImage = (Bitmap)canvas.Clone();
             }
-
-            return (System.Drawing.Image)previousImage.Clone();
+            var toPresent = (System.Drawing.Image)previousImage.Clone();
+            if (presentAction != null)
+            {
+                presentAction(toPresent);
+            }
+            else
+            {
+                toPresent.Dispose();
+            }
         }
 
         private void DrawTextSegment(Graphics g, TextSegment textSegment)

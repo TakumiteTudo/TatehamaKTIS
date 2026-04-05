@@ -11,9 +11,7 @@ namespace TatehamaKTIS
         public Form1()
         {
             InitializeComponent();
-            displayManager = new DisplayManager(new Display.Rendering.BitmapDisplayRenderer());
-
-            displayManager.displayAction = (img) =>
+            var renderer = new Display.Rendering.BitmapDisplayRenderer((img) =>
             {
                 if (InvokeRequired)
                 {
@@ -26,7 +24,8 @@ namespace TatehamaKTIS
                 {
                     pictureBox1.Image = img;
                 }
-            };
+            });
+            displayManager = new DisplayManager(renderer);
             displayManager.DisplayUpdate();
             nowtouch = false;
         }

@@ -14,7 +14,12 @@ class Program
         {
             Console.WriteLine("Starting basic renderer tests...");
 
-            var renderer = new BitmapDisplayRenderer();
+            System.Drawing.Image? lastPresented = null;
+            var renderer = new BitmapDisplayRenderer((img) =>
+            {
+                // capture presented image for test assertions
+                lastPresented = img;
+            });
 
             var requestFull = new DisplayRenderRequest
             {
@@ -28,12 +33,14 @@ class Program
                 ButtonConfigs = new Dictionary<string, ButtonConfig>()
             };
 
-            var imgFull = renderer.RenderFull(requestFull);
-            if (imgFull == null || imgFull.Width != 200 || imgFull.Height != 100)
+            renderer.RenderFull(requestFull);
+            if (lastPresented == null || lastPresented.Width != 200 || lastPresented.Height != 100)
             {
                 Console.WriteLine("RenderFull failed: unexpected image size");
                 return 2;
             }
+            lastPresented.Dispose();
+            lastPresented = null;
             Console.WriteLine("RenderFull OK");
 
             var requestDelta = new DisplayRenderRequest
@@ -49,12 +56,14 @@ class Program
                 ButtonConfigs = new Dictionary<string, ButtonConfig>()
             };
 
-            var imgDelta = renderer.RenderDelta(requestDelta);
-            if (imgDelta == null || imgDelta.Width != 300 || imgDelta.Height != 150)
+            renderer.RenderDelta(requestDelta);
+            if (lastPresented == null || lastPresented.Width != 300 || lastPresented.Height != 150)
             {
                 Console.WriteLine("RenderDelta failed: unexpected image size");
                 return 3;
             }
+            lastPresented.Dispose();
+            lastPresented = null;
             Console.WriteLine("RenderDelta OK");
 
             Console.WriteLine("All basic renderer tests passed");

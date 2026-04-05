@@ -9,7 +9,23 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include=".git\msg1.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Image\" />
+    <Folder Include="Tests\RendererTests\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include=".git\msg_filter2.sh" />
+    <None Include=".git\rewrite4.ps1" />
+    <None Include=".git\rewrite_last2.ps1" />
+    <None Include=".git\rewrite_msg.ps1" />
+    <None Include=".git\rewrite_msg_seq.ps1" />
+    <None Include=".git\seq_edit.ps1" />
+    <None Include=".git\seq_edit2.ps1" />
+    <None Include=".git\seq_edit4.ps1" />
   </ItemGroup>
 
 </Project>
