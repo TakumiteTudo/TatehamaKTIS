@@ -18,12 +18,12 @@ namespace TatehamaKTIS
                 {
                     Invoke(new Action(() =>
                     {
-                        pictureBox1.Image = bmp;
+                        pictureBox1.Image = bmp as System.Drawing.Image;
                     }));
                 }
                 else
                 {
-                    pictureBox1.Image = bmp;
+                    pictureBox1.Image = bmp as System.Drawing.Image;
                 }
             };
             displayManager.DisplayUpdate();
